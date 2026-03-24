@@ -33,6 +33,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
  * 提供流式问答与任务取消接口
  */
 @RestController
+//自动生成构造器，用于依赖注入
 @RequiredArgsConstructor
 public class RAGChatController {
 
@@ -41,15 +42,20 @@ public class RAGChatController {
     /**
      * 发起 SSE 流式对话
      */
+    //防止用户重复提交请求的幂等注解
     @IdempotentSubmit(
             key = "T(com.nageoffer.ai.ragent.framework.context.UserContext).getUserId()",
             message = "当前会话处理中，请稍后再发起新的对话"
     )
+    //返回的是流式返回类型，不是普通json
     @GetMapping(value = "/rag/v3/chat", produces = "text/event-stream;charset=UTF-8")
+    //参数，问题，对话号，是否开启深度思考
     public SseEmitter chat(@RequestParam String question,
                            @RequestParam(required = false) String conversationId,
                            @RequestParam(required = false, defaultValue = "false") Boolean deepThinking) {
+        //不设置超时时间，即无限等待
         SseEmitter emitter = new SseEmitter(0L);
+        //将参数传入service
         ragChatService.streamChat(question, conversationId, deepThinking, emitter);
         return emitter;
     }
@@ -57,6 +63,7 @@ public class RAGChatController {
     /**
      * 停止指定任务
      */
+    //幂等注解
     @IdempotentSubmit
     @PostMapping(value = "/rag/v3/stop")
     public Result<Void> stop(@RequestParam String taskId) {
