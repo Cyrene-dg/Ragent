@@ -79,7 +79,9 @@ public class RetrievalEngine {
      * @return RetrievalContext 检索上下文，包含知识库上下文、MCP上下文和分组的检索块
      */
     @RagTraceNode(name = "retrieval-engine", type = "RETRIEVE")
+    //检索总入口，负责并发处理每个子问题的 KB/MCP 结果，并最终拼成一个总的 RetrievalContext 返回
     public RetrievalContext retrieve(List<SubQuestionIntent> subIntents, int topK) {
+        //如果前面意图识别阶段没有给出任何子问题结果，那这里就不做检索了，直接返回一个空的检索上下文。
         if (CollUtil.isEmpty(subIntents)) {
             return RetrievalContext.builder()
                     .mcpContext("")
@@ -88,53 +90,69 @@ public class RetrievalEngine {
                     .build();
         }
 
+
+        //topk:每个检索问题最多取多少条结果
         int finalTopK = topK > 0 ? topK : DEFAULT_TOP_K;
+        //核心方法：对每个子问题异步处理，分别构建出它自己的检索结果上下文。
         List<CompletableFuture<SubQuestionContext>> tasks = subIntents.stream()
+                //异步处理，提升多子问题场景下的整体检索速度。
                 .map(si -> CompletableFuture.supplyAsync(
+                        //把单个子问题的处理委托给buildSubQuestionContext
                         () -> buildSubQuestionContext(
                                 si,
+                                //这个具体子问题最终该用多大的 topK。
                                 resolveSubQuestionTopK(si, finalTopK)
                         ),
                         ragContextExecutor
                 ))
                 .toList();
+        //把前面那些异步任务一个个等完，并拿到真正的子问题上下文结果列表。
         List<SubQuestionContext> contexts = tasks.stream()
                 .map(CompletableFuture::join)
                 .toList();
 
-        StringBuilder kbBuilder = new StringBuilder();
-        StringBuilder mcpBuilder = new StringBuilder();
-        Map<String, List<RetrievedChunk>> mergedIntentChunks = new ConcurrentHashMap<>();
+        StringBuilder kbBuilder = new StringBuilder();//用来拼接所有子问题的知识库上下文文本。
+        StringBuilder mcpBuilder = new StringBuilder();//用来拼接所有子问题的工具调用结果文本。
+        Map<String, List<RetrievedChunk>> mergedIntentChunks = new ConcurrentHashMap<>();//用来收集所有子问题的检索 chunk 分组结果。
 
+        //把每个子问题的局部结果汇总进总结果
         for (SubQuestionContext context : contexts) {
+            //如果某个子问题确实检索到了 KB 内容，就把它按统一格式追加到总的 KB 文本里。
             if (StrUtil.isNotBlank(context.kbContext())) {
                 appendSection(kbBuilder, context.question(), context.kbContext());
             }
+            //如果某个子问题确实检索到了 KB 内容，就把它按统一格式追加到总的 KB 文本里。
             if (StrUtil.isNotBlank(context.mcpContext())) {
                 appendSection(mcpBuilder, context.question(), context.mcpContext());
             }
+            //如果某个子问题有 MCP 工具调用结果，就把它也按统一格式追加到总的 MCP 文本里。
             if (CollUtil.isNotEmpty(context.intentChunks())) {
                 mergedIntentChunks.putAll(context.intentChunks());
             }
         }
 
+        //把前面汇总好的 MCP 文本、KB 文本、意图 chunk 明细，统一封装成一个总的 RetrievalContext 返回。
         return RetrievalContext.builder()
                 .mcpContext(mcpBuilder.toString().trim())
                 .kbContext(kbBuilder.toString().trim())
                 .intentChunks(mergedIntentChunks)
                 .build();
     }
-
+    //针对单个子问题，分别处理 KB 检索和 MCP 调用，再封装成一个子问题级上下文结果
     private SubQuestionContext buildSubQuestionContext(SubQuestionIntent intent, int topK) {
+       //把这个子问题真正处理成可用的 KB/MCP 上下文
         List<NodeScore> kbIntents = filterKbIntents(intent.nodeScores());
         List<NodeScore> mcpIntents = filterMCPIntents(intent.nodeScores());
 
+        //拿当前子问题和它的 KB 意图，去做知识检索，并得到一个 KB 检索结果对象。
         KbResult kbResult = retrieveAndRerank(intent, kbIntents, topK);
 
+        //如果当前子问题存在 MCP 意图，就去执行对应工具并把结果合并成一段 MCP 上下文；如果没有 MCP 意图，就给空字符串。
         String mcpContext = CollUtil.isNotEmpty(mcpIntents)
                 ? executeMcpAndMerge(intent.subQuestion(), mcpIntents)
                 : "";
 
+        //把当前子问题文本、KB 上下文、MCP 上下文、检索 chunk 明细，一起封装成一个 SubQuestionContext 返回。
         return new SubQuestionContext(intent.subQuestion(), kbResult.groupedContext(), mcpContext, kbResult.intentChunks());
     }
 
@@ -143,6 +161,7 @@ public class RetrievalEngine {
      * 1. 命中 KB 意图节点且配置了节点级 topK：取最大值（多意图保守放大）
      * 2. 没有任何可用节点级 topK：回退到全局 topK
      */
+    //计算某个子问题实际应该用多大的 topK，优先采用命中意图节点里配置的较大值，否则回退到全局值。
     private int resolveSubQuestionTopK(SubQuestionIntent intent, int fallbackTopK) {
         return filterKbIntents(intent.nodeScores()).stream()
                 .map(NodeScore::getNode)
@@ -154,6 +173,7 @@ public class RetrievalEngine {
                 .orElse(fallbackTopK);
     }
 
+    //追加文本
     private void appendSection(StringBuilder builder, String question, String context) {
         builder.append("---\n")
                 .append("**子问题**：").append(question).append("\n\n")
@@ -161,6 +181,7 @@ public class RetrievalEngine {
                 .append(context).append("\n\n");
     }
 
+    //从候选意图里筛出分数达标、类型为 MCP 且配置了工具 ID 的意图。
     private List<NodeScore> filterMCPIntents(List<NodeScore> nodeScores) {
         return nodeScores.stream()
                 .filter(ns -> ns.getScore() >= INTENT_MIN_SCORE)
@@ -169,19 +190,25 @@ public class RetrievalEngine {
                 .toList();
     }
 
+    //从候选意图里筛出分数达标且可视为 KB 路线的意图。
     private List<NodeScore> filterKbIntents(List<NodeScore> nodeScores) {
         return nodeScores.stream()
+                //先把分数太低的候选意图去掉。
                 .filter(ns -> ns.getScore() >= INTENT_MIN_SCORE)
+                //先把分数太低的候选意图去掉。
                 .filter(ns -> {
+                    //先拿到这个候选意图真正对应的节点对象
                     IntentNode node = ns.getNode();
                     if (node == null) {
                         return false;
                     }
+                    //如果这个节点的类型是 KB，或者类型干脆没写（null），那也把它当成 KB 保留。
                     return node.getKind() == null || node.getKind() == IntentKind.KB;
                 })
                 .toList();
     }
 
+    //执行当前子问题对应的所有 MCP 工具，并把成功结果格式化成一段 MCP 上下文文本。
     private String executeMcpAndMerge(String question, List<NodeScore> mcpIntents) {
         if (CollUtil.isEmpty(mcpIntents)) {
             return "";
@@ -195,6 +222,8 @@ public class RetrievalEngine {
         return contextFormatter.formatMcpContext(responses, mcpIntents);
     }
 
+
+    //针对一个子问题，先去知识库真正检索一批相关 chunk；然后把这些 chunk 按“意图节点”整理成后面大模型能吃的 KB 上下文文本，并顺手保留结构化分组结果。
     private KbResult retrieveAndRerank(SubQuestionIntent intent, List<NodeScore> kbIntents, int topK) {
         // 使用多通道检索引擎（是否启用全局检索由置信度阈值决定）
         List<SubQuestionIntent> subIntents = List.of(intent);
@@ -224,6 +253,7 @@ public class RetrievalEngine {
         return new KbResult(groupedContext, intentChunks);
     }
 
+    //对单个子问题执行知识库检索，并把检索结果按意图节点分组、格式化成 KB 上下文。
     private List<MCPResponse> executeMcpTools(String question, List<NodeScore> mcpIntentScores) {
         List<MCPRequest> requests = mcpIntentScores.stream()
                 .map(ns -> buildMcpRequest(question, ns.getNode()))
@@ -244,6 +274,7 @@ public class RetrievalEngine {
                 .toList();
     }
 
+    //把多个 MCP 意图先转成请求，再并发调用所有对应工具。
     private MCPResponse executeSingleMcpTool(MCPRequest request) {
         String toolId = request.getToolId();
         Optional<MCPToolExecutor> executorOpt = mcpToolRegistry.getExecutor(toolId);
@@ -260,6 +291,7 @@ public class RetrievalEngine {
         }
     }
 
+    //执行一次单独的 MCP 工具调用，并对“工具不存在”或“执行异常”做统一兜底。
     private MCPRequest buildMcpRequest(String question, IntentNode intentNode) {
         String toolId = intentNode.getMcpToolId();
         Optional<MCPToolExecutor> executorOpt = mcpToolRegistry.getExecutor(toolId);
@@ -280,6 +312,7 @@ public class RetrievalEngine {
                 .build();
     }
 
+    //根据当前问题和意图节点信息，提取参数并构造一个标准的 MCP 工具请求对象。
     private record SubQuestionContext(String question,
                                       String kbContext,
                                       String mcpContext,

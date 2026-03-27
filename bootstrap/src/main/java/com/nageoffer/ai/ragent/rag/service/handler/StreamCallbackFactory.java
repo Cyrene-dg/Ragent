@@ -49,14 +49,15 @@ public class StreamCallbackFactory {
     public StreamCallback createChatEventHandler(SseEmitter emitter,
                                                  String conversationId,
                                                  String taskId) {
+        //创建参数对象
         StreamChatHandlerParams params = StreamChatHandlerParams.builder()
-                .emitter(emitter)
-                .conversationId(conversationId)
-                .taskId(taskId)
-                .modelProperties(modelProperties)
-                .memoryService(memoryService)
-                .conversationGroupService(conversationGroupService)
-                .taskManager(taskManager)
+                .emitter(emitter)//这次 handler 以后如果要往前端推流，就用这个 emitter。
+                .conversationId(conversationId)//这个 handler 知道自己服务的是哪一个会话。
+                .taskId(taskId)//这个 handler 知道自己对应的是哪一个流式任务。
+                .modelProperties(modelProperties)//把当前类里的成员变量 modelProperties 放进去。
+                .memoryService(memoryService)//把记忆服务传进去。
+                .conversationGroupService(conversationGroupService)//把会话分组服务传进去。
+                .taskManager(taskManager)//把任务管理器也传进去。
                 .build();
 
         return new StreamChatEventHandler(params);

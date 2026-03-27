@@ -50,46 +50,71 @@ public class IntentResolver {
     private final Executor intentClassifyExecutor;
 
     @RagTraceNode(name = "intent-resolve", type = "INTENT")
+    //对改写结果里的每个子问题并发做意图分类，并把总意图数裁剪到上限内。
     public List<SubQuestionIntent> resolve(RewriteResult rewriteResult) {
+       //校验子问题是否为空，优先使用 RewriteResult 里已经拆好的子问题列表；如果子问题列表为空，就退回到只处理“改写后的主问题”这一条。
         List<String> subQuestions = CollUtil.isNotEmpty(rewriteResult.subQuestions())
                 ? rewriteResult.subQuestions()
                 : List.of(rewriteResult.rewrittenQuestion());
+        //把每个子问题都丢到线程池里异步分类，最后得到一组 Future 任务。
         List<CompletableFuture<SubQuestionIntent>> tasks = subQuestions.stream()
                 .map(q -> CompletableFuture.supplyAsync(
+                        //对某个子问题 q，先调用 classifyIntents(q) 得到它的候选意图列表，再把“子问题本身 + 该问题对应的意图列表”封装成一个 SubQuestionIntent。
                         () -> new SubQuestionIntent(q, classifyIntents(q)),
                         intentClassifyExecutor
                 ))
                 .toList();
+        //把前面那些 Future 一个个取结果，最终收集成真正的 SubQuestionIntent 列表。
         List<SubQuestionIntent> subIntents = tasks.stream()
                 .map(CompletableFuture::join)
                 .toList();
+        //不要直接把所有子问题的所有候选意图原样返回，而是先做一次全局裁剪，再返回最终结果。
         return capTotalIntents(subIntents);
     }
 
+    //把所有子问题的意图结果按类型重新汇总成两组：MCP 意图和 KB 意图。
     public IntentGroup mergeIntentGroup(List<SubQuestionIntent> subIntents) {
+        //先准备一个空列表，用来收集所有属于 MCP 类型的意图。
         List<NodeScore> mcpIntents = new ArrayList<>();
+        //再准备一个空列表，用来收集所有属于 KB 类型的意图。
         List<NodeScore> kbIntents = new ArrayList<>();
+        //再准备一个空列表，用来收集所有属于 KB 类型的意图。
         for (SubQuestionIntent si : subIntents) {
+            //从当前这个子问题的候选意图列表里，把所有 MCP 类型意图筛出来，然后全部加到全局 mcpIntents 列表里。
             mcpIntents.addAll(filterMcpIntents(si.nodeScores()));
+            //从当前这个子问题的候选意图列表里，把所有 MCP 类型意图筛出来，然后全部加到全局 mcpIntents 列表里。
             kbIntents.addAll(filterKbIntents(si.nodeScores()));
         }
+        //封装成一个 IntentGroup 返回。
         return new IntentGroup(mcpIntents, kbIntents);
     }
 
+    //判断当前意图列表是否只有一个系统意图，用于识别“纯系统响应”场景
     public boolean isSystemOnly(List<NodeScore> nodeScores) {
+        //校验条件1.只能有一个候选意图2.只能有一个候选意图3.这个节点类型必须是 SYSTEM,不能是KB和MCP
         return nodeScores.size() == 1
                 && nodeScores.get(0).getNode() != null
                 && nodeScores.get(0).getNode().getKind() == SYSTEM;
     }
 
+//    对单个问题调用分类器做意图识别，并按最低分阈值和最大数量做初步过滤。
+    //输入一个问题字符串，输出这个问题对应的一组候选意图 NodeScore 列表。
     private List<NodeScore> classifyIntents(String question) {
+        //把当前问题交给意图分类器，得到原始的候选意图列表。
+
+        //这里直接列出这个方法的流程，会先加载最新意图树，用叶子节点构造分类提示词，再把当前问题交给大模型，让模型返回若干“意图节点 id + 分数”的 JSON 结果；程序随后解析这些结果、校验节点合法性、映射回真实 IntentNode 并封装成 NodeScore 列表，按分数降序返回。
+        //整个意图树都在 Redis 里缓存,根节点是值
         List<NodeScore> scores = intentClassifier.classifyTargets(question);
+        //对分类器返回的原始候选意图列表，再做一轮筛选处理，然后直接返回。
         return scores.stream()
+                //把分数低于最低阈值的意图过滤掉。
                 .filter(ns -> ns.getScore() >= INTENT_MIN_SCORE)
+                //在过滤完低分意图后，最多只保留前 MAX_INTENT_COUNT 个候选意图。
                 .limit(MAX_INTENT_COUNT)
                 .toList();
     }
 
+    //对单个问题调用分类器做意图识别，并按最低分阈值和最大数量做初步过滤。
     private List<NodeScore> filterMcpIntents(List<NodeScore> nodeScores) {
         return nodeScores.stream()
                 .filter(ns -> ns.getNode() != null && ns.getNode().getKind() == IntentKind.MCP)
@@ -97,6 +122,7 @@ public class IntentResolver {
                 .toList();
     }
 
+    //从意图列表里筛出知识库检索用的 KB 类型意图。
     private List<NodeScore> filterKbIntents(List<NodeScore> nodeScores) {
         return nodeScores.stream()
                 .filter(ns -> {

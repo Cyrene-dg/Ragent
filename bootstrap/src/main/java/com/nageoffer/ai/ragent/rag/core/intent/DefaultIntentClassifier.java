@@ -133,6 +133,7 @@ public class DefaultIntentClassifier implements IntentClassifier, IntentNodeRegi
      * 对所有"叶子分类节点"做意图识别，由 LLM 输出每个分类的 score
      * - 返回结果已按 score 从高到低排序
      */
+    //它不是用传统分类模型硬编码做意图识别，而是把“意图树 + 当前问题”交给大模型，让大模型返回候选意图及分数，再由程序做结构化解析和校验。
     @Override
     public List<NodeScore> classifyTargets(String question) {
         // 每次都从Redis读取最新数据
