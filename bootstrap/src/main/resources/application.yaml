@@ -99,6 +99,7 @@ ai:
       api-key: ${BAILIAN_API_KEY:}
       endpoints:
         chat: /compatible-mode/v1/chat/completions
+        embedding: /compatible-mode/v1/embeddings
         rerank: /api/v1/services/rerank/text-rerank/text-rerank
     siliconflow:
       url: https://api.siliconflow.cn
@@ -140,6 +141,11 @@ ai:
   embedding:
     default-model: qwen-emb-8b
     candidates:
+      - id: text-embedding-v4
+        provider: bailian
+        model: text-embedding-v4
+        dimension: 1024
+        priority: 0
       - id: qwen-emb-8b
         provider: siliconflow
         model: Qwen/Qwen3-Embedding-8B

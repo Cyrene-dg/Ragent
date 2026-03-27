@@ -1,0 +1,183 @@
+[INFO] Scanning for projects...
+[WARNING] 
+[WARNING] Some problems were encountered while building the effective model for com.nageoffer.ai:bootstrap:jar:0.0.1-SNAPSHOT
+[WARNING] 'build.plugins.plugin.version' for org.apache.maven.plugins:maven-compiler-plugin is missing. @ com.nageoffer.ai:ragent:0.0.1-SNAPSHOT, G:\Ragent2026\ragent\pom.xml, line 162, column 21
+[WARNING] 'build.plugins.plugin.version' for org.apache.maven.plugins:maven-surefire-plugin is missing. @ com.nageoffer.ai:ragent:0.0.1-SNAPSHOT, G:\Ragent2026\ragent\pom.xml, line 185, column 21
+[WARNING] 
+[WARNING] It is highly recommended to fix these problems because they threaten the stability of your build.
+[WARNING] 
+[WARNING] For this reason, future Maven versions might no longer support building such malformed projects.
+[WARNING] 
+[INFO] 
+[INFO] ---------------------< com.nageoffer.ai:bootstrap >---------------------
+[INFO] Building bootstrap 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.5.7:run (default-cli) > test-compile @ bootstrap >>>
+[INFO] 
+[INFO] --- dependency:3.7.0:properties (default) @ bootstrap ---
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ bootstrap ---
+[WARNING] Using platform encoding (GBK actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] Copying 22 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ bootstrap ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 334 source files with javac [debug parameters target 17] to target\classes
+[INFO] /G:/Ragent2026/ragent/bootstrap/src/main/java/com/nageoffer/ai/ragent/ingestion/util/JsonResponseParser.java: 某些输入文件使用了未经检查或不安全的操作。
+[INFO] /G:/Ragent2026/ragent/bootstrap/src/main/java/com/nageoffer/ai/ragent/ingestion/util/JsonResponseParser.java: 有关详细信息, 请使用 -Xlint:unchecked 重新编译。
+[INFO] 
+[INFO] --- spotless:2.22.1:apply (default) @ bootstrap ---
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ bootstrap ---
+[WARNING] Using platform encoding (GBK actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] skip non existing resourceDirectory G:\Ragent2026\ragent\bootstrap\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ bootstrap ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 12 source files with javac [debug parameters target 17] to target\test-classes
+[INFO] /G:/Ragent2026/ragent/bootstrap/src/test/java/com/nageoffer/ai/ragent/rag/Intent/VectorIntentClassifier.java: G:\Ragent2026\ragent\bootstrap\src\test\java\com\nageoffer\ai\ragent\rag\Intent\VectorIntentClassifier.java使用或覆盖了已过时的 API。
+[INFO] /G:/Ragent2026/ragent/bootstrap/src/test/java/com/nageoffer/ai/ragent/rag/Intent/VectorIntentClassifier.java: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+[INFO] 
+[INFO] <<< spring-boot:3.5.7:run (default-cli) < test-compile @ bootstrap <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:3.5.7:run (default-cli) @ bootstrap ---
+[INFO] Attaching agents: []
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.7)
+
+2026-03-27T16:38:59.935+08:00  INFO 9476 --- [ragent-service] [           main] c.nageoffer.ai.ragent.RagentApplication  : Starting RagentApplication using Java 17.0.18 with PID 9476 (G:\Ragent2026\ragent\bootstrap\target\classes started by Lenovo in G:\Ragent2026\ragent\bootstrap)
+2026-03-27T16:38:59.936+08:00  INFO 9476 --- [ragent-service] [           main] c.nageoffer.ai.ragent.RagentApplication  : No active profile set, falling back to 1 default profile: "default"
+2026-03-27T16:39:00.586+08:00  INFO 9476 --- [ragent-service] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-03-27T16:39:00.588+08:00  INFO 9476 --- [ragent-service] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-03-27T16:39:00.634+08:00  INFO 9476 --- [ragent-service] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 36 ms. Found 0 Redis repository interfaces.
+2026-03-27T16:39:01.261+08:00  INFO 9476 --- [ragent-service] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 9090 (http)
+2026-03-27T16:39:01.271+08:00  INFO 9476 --- [ragent-service] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-03-27T16:39:01.271+08:00  INFO 9476 --- [ragent-service] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.48]
+2026-03-27T16:39:01.354+08:00  INFO 9476 --- [ragent-service] [           main] o.a.c.c.C.[.[localhost].[/api/ragent]    : Initializing Spring embedded WebApplicationContext
+2026-03-27T16:39:01.355+08:00  INFO 9476 --- [ragent-service] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1376 ms
+ _ _   |_  _ _|_. ___ _ |    _ 
+| | |\/|_)(_| | |_\  |_)||_|_\ 
+     /               |         
+                        3.5.14 
+2026-03-27T16:39:03.998+08:00  INFO 9476 --- [ragent-service] [           main] org.redisson.Version                     : Redisson 4.0.0
+2026-03-27T16:39:04.349+08:00  INFO 9476 --- [ragent-service] [isson-netty-1-4] o.redisson.connection.ConnectionsHolder  : 1 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-03-27T16:39:04.416+08:00  INFO 9476 --- [ragent-service] [sson-netty-1-19] o.redisson.connection.ConnectionsHolder  : 24 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-03-27T16:39:04.901+08:00  INFO 9476 --- [ragent-service] [           main] com.zaxxer.hikari.HikariDataSource       : RagentHikariPool - Starting...
+2026-03-27T16:39:05.072+08:00  INFO 9476 --- [ragent-service] [           main] com.zaxxer.hikari.pool.HikariPool        : RagentHikariPool - Added connection com.mysql.cj.jdbc.ConnectionImpl@65c040c9
+2026-03-27T16:39:05.073+08:00  INFO 9476 --- [ragent-service] [           main] com.zaxxer.hikari.HikariDataSource       : RagentHikariPool - Start completed.
+2026-03-27T16:39:05.100+08:00  INFO 9476 --- [ragent-service] [           main] c.n.a.r.r.c.r.QueryTermMappingService    : 查询归一化映射规则加载完成, 共加载 0 条规则
+2026-03-27T16:39:05.138+08:00  INFO 9476 --- [ragent-service] [           main] c.n.a.r.r.c.mcp.DefaultMCPToolRegistry   : MCP 工具注册跳过, 未发现任何工具执行器
+2026-03-27T16:39:05.138+08:00  INFO 9476 --- [ragent-service] [           main] c.n.a.r.r.c.mcp.DefaultMCPToolRegistry   : MCP 工具自动注册完成, 共注册 0 个工具
+2026-03-27T16:39:05.185+08:00  INFO 9476 --- [ragent-service] [           main] n.a.r.r.c.m.c.MCPClientAutoConfiguration : 连接 MCP Server: name=default, url=http://localhost:9099
+2026-03-27T16:39:05.239+08:00 ERROR 9476 --- [ragent-service] [           main] c.n.a.r.r.core.mcp.client.HttpMCPClient  : MCP 请求异常，method=initialize, url=http://localhost:9099/mcp, 原因=Failed to connect to localhost/[0:0:0:0:0:0:0:1]:9099
+2026-03-27T16:39:05.239+08:00 ERROR 9476 --- [ragent-service] [           main] c.n.a.r.r.core.mcp.client.HttpMCPClient  : MCP 初始化失败，跳过 initialized 通知发送
+2026-03-27T16:39:05.239+08:00 ERROR 9476 --- [ragent-service] [           main] n.a.r.r.c.m.c.MCPClientAutoConfiguration : MCP Server [default] 初始化失败，跳过工具注册
+2026-03-27T16:39:05.303+08:00  INFO 9476 --- [ragent-service] [           main] c.n.a.r.f.d.SnowflakeIdInitializer       : 分布式Snowflake初始化完成, workerId: 18, datacenterId: 0
+2026-03-27T16:39:05.551+08:00  INFO 9476 --- [ragent-service] [           main] m.e.s.MybatisPlusApplicationContextAware : Register ApplicationContext instances org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@5829e4f4
+2026-03-27T16:39:05.730+08:00  INFO 9476 --- [ragent-service] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 9090 (http) with context path '/api/ragent'
+2026-03-27T16:39:12.145+08:00  INFO 9476 --- [ragent-service] [           main] n.a.r.f.m.c.RedisStreamConsumerBootstrap : Redis Stream 消费者注册成功，bean: demoMessageConsumer, topic: mq:demo:topic, consumerGroup: demo-consumer-group, consumerName: LAPTOP-909HVVE4-9476
+2026-03-27T16:39:12.156+08:00  INFO 9476 --- [ragent-service] [           main] c.nageoffer.ai.ragent.RagentApplication  : Started RagentApplication in 12.513 seconds (process running for 12.898)
+2026-03-27T16:39:44.935+08:00  INFO 9476 --- [ragent-service] [nio-9090-exec-1] o.a.c.c.C.[.[localhost].[/api/ragent]    : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-27T16:39:44.935+08:00  INFO 9476 --- [ragent-service] [nio-9090-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-03-27T16:39:44.936+08:00  INFO 9476 --- [ragent-service] [nio-9090-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-03-27T16:39:46.114+08:00 ERROR 9476 --- [ragent-service] [hunk_executor_0] c.n.a.r.i.e.SiliconFlowEmbeddingClient   : SiliconFlow embeddings HTTP error: status=401, body="Invalid token"
+2026-03-27T16:39:46.115+08:00 ERROR 9476 --- [ragent-service] [hunk_executor_0] c.n.a.r.i.e.SiliconFlowEmbeddingClient   : SiliconFlow embeddings 调用失败
+
+com.nageoffer.ai.ragent.infra.http.ModelClientException: 调用 SiliconFlow Embedding 失败: HTTP 401 - "Invalid token"
+	at com.nageoffer.ai.ragent.infra.embedding.SiliconFlowEmbeddingClient.doEmbedOnce(SiliconFlowEmbeddingClient.java:124) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	at com.nageoffer.ai.ragent.infra.embedding.SiliconFlowEmbeddingClient.embedBatch(SiliconFlowEmbeddingClient.java:81) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	at com.nageoffer.ai.ragent.core.chunk.AbstractEmbeddingChunker.embedBatch(AbstractEmbeddingChunker.java:100) ~[classes/:na]
+	at com.nageoffer.ai.ragent.core.chunk.AbstractEmbeddingChunker.chunk(AbstractEmbeddingChunker.java:66) ~[classes/:na]
+	at com.nageoffer.ai.ragent.knowledge.service.impl.KnowledgeDocumentServiceImpl.runChunkProcess(KnowledgeDocumentServiceImpl.java:421) ~[classes/:na]
+	at com.nageoffer.ai.ragent.knowledge.service.impl.KnowledgeDocumentServiceImpl.runChunkTask(KnowledgeDocumentServiceImpl.java:327) ~[classes/:na]
+	at com.nageoffer.ai.ragent.knowledge.service.impl.KnowledgeDocumentServiceImpl.lambda$startChunk$3(KnowledgeDocumentServiceImpl.java:281) ~[classes/:na]
+	at com.alibaba.ttl.TtlRunnable.run(TtlRunnable.java:60) ~[transmittable-thread-local-2.14.5.jar:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635) ~[na:na]
+	at java.base/java.lang.Thread.run(Thread.java:840) ~[na:na]
+
+2026-03-27T16:39:46.118+08:00  WARN 9476 --- [ragent-service] [hunk_executor_0] c.n.a.r.c.c.AbstractEmbeddingChunker     : Embedding batch failed, fallback to local vectors. modelId=qwen-emb-8b, provider=siliconflow
+
+java.lang.RuntimeException: 调用 SiliconFlow Embedding 失败: 调用 SiliconFlow Embedding 失败: HTTP 401 - "Invalid token"
+	at com.nageoffer.ai.ragent.infra.embedding.SiliconFlowEmbeddingClient.embedBatch(SiliconFlowEmbeddingClient.java:87) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	at com.nageoffer.ai.ragent.core.chunk.AbstractEmbeddingChunker.embedBatch(AbstractEmbeddingChunker.java:100) ~[classes/:na]
+	at com.nageoffer.ai.ragent.core.chunk.AbstractEmbeddingChunker.chunk(AbstractEmbeddingChunker.java:66) ~[classes/:na]
+	at com.nageoffer.ai.ragent.knowledge.service.impl.KnowledgeDocumentServiceImpl.runChunkProcess(KnowledgeDocumentServiceImpl.java:421) ~[classes/:na]
+	at com.nageoffer.ai.ragent.knowledge.service.impl.KnowledgeDocumentServiceImpl.runChunkTask(KnowledgeDocumentServiceImpl.java:327) ~[classes/:na]
+	at com.nageoffer.ai.ragent.knowledge.service.impl.KnowledgeDocumentServiceImpl.lambda$startChunk$3(KnowledgeDocumentServiceImpl.java:281) ~[classes/:na]
+	at com.alibaba.ttl.TtlRunnable.run(TtlRunnable.java:60) ~[transmittable-thread-local-2.14.5.jar:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635) ~[na:na]
+	at java.base/java.lang.Thread.run(Thread.java:840) ~[na:na]
+Caused by: com.nageoffer.ai.ragent.infra.http.ModelClientException: 调用 SiliconFlow Embedding 失败: HTTP 401 - "Invalid token"
+	at com.nageoffer.ai.ragent.infra.embedding.SiliconFlowEmbeddingClient.doEmbedOnce(SiliconFlowEmbeddingClient.java:124) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	at com.nageoffer.ai.ragent.infra.embedding.SiliconFlowEmbeddingClient.embedBatch(SiliconFlowEmbeddingClient.java:81) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	... 9 common frames omitted
+
+2026-03-27T16:39:46.344+08:00  INFO 9476 --- [ragent-service] [hunk_executor_0] c.n.a.r.r.c.v.MilvusVectorStoreService   : Milvus 删除指定文档的所有 chunk 向量索引成功, collection=yuanshenkb20260327, kbId=2037407325907623936, docId=2037407490534055936, deleteCnt=0
+2026-03-27T16:39:46.459+08:00  INFO 9476 --- [ragent-service] [hunk_executor_0] c.n.a.r.r.c.v.MilvusVectorStoreService   : Milvus chunk 建立/写入向量索引成功, collection=yuanshenkb20260327, rows=1
+2026-03-27T16:41:28.418+08:00  WARN 9476 --- [ragent-service] [nio-9090-exec-6] c.n.a.r.f.web.GlobalExceptionHandler     : [POST] http://localhost:9090/api/ragent/knowledge-base/docs/2037407490534055936/chunk [auth] not-login: token 无效：@{userId=2001523723396308993; role=admin; token=087f68c9496a43b78b8dfdb21cdc65bc; avatar=https://static.deepseek.com/user-avatar/G_6cuD8GbD53VwGRwisvCsZ6}
+2026-03-27T16:41:28.422+08:00  WARN 9476 --- [ragent-service] [nio-9090-exec-7] c.n.a.r.f.web.GlobalExceptionHandler     : [GET] http://localhost:9090/api/ragent/knowledge-base/docs/2037407490534055936 [auth] not-login: token 无效：@{userId=2001523723396308993; role=admin; token=087f68c9496a43b78b8dfdb21cdc65bc; avatar=https://static.deepseek.com/user-avatar/G_6cuD8GbD53VwGRwisvCsZ6}
+2026-03-27T16:42:35.581+08:00  INFO 9476 --- [ragent-service] [nio-9090-exec-3] n.a.r.k.s.i.KnowledgeDocumentServiceImpl : 文档已存在分块记录，将删除历史分块并重新分块: docId=2037407490534055936
+2026-03-27T16:42:35.731+08:00  INFO 9476 --- [ragent-service] [nio-9090-exec-3] c.n.a.r.r.c.v.MilvusVectorStoreService   : Milvus 删除指定文档的所有 chunk 向量索引成功, collection=yuanshenkb20260327, kbId=2037407325907623936, docId=2037407490534055936, deleteCnt=1
+2026-03-27T16:42:35.832+08:00 ERROR 9476 --- [ragent-service] [hunk_executor_1] c.n.a.r.i.e.SiliconFlowEmbeddingClient   : SiliconFlow embeddings HTTP error: status=401, body="Invalid token"
+2026-03-27T16:42:35.843+08:00 ERROR 9476 --- [ragent-service] [hunk_executor_1] c.n.a.r.i.e.SiliconFlowEmbeddingClient   : SiliconFlow embeddings 调用失败
+
+com.nageoffer.ai.ragent.infra.http.ModelClientException: 调用 SiliconFlow Embedding 失败: HTTP 401 - "Invalid token"
+	at com.nageoffer.ai.ragent.infra.embedding.SiliconFlowEmbeddingClient.doEmbedOnce(SiliconFlowEmbeddingClient.java:124) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	at com.nageoffer.ai.ragent.infra.embedding.SiliconFlowEmbeddingClient.embedBatch(SiliconFlowEmbeddingClient.java:81) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	at com.nageoffer.ai.ragent.core.chunk.AbstractEmbeddingChunker.embedBatch(AbstractEmbeddingChunker.java:100) ~[classes/:na]
+	at com.nageoffer.ai.ragent.core.chunk.AbstractEmbeddingChunker.chunk(AbstractEmbeddingChunker.java:66) ~[classes/:na]
+	at com.nageoffer.ai.ragent.knowledge.service.impl.KnowledgeDocumentServiceImpl.runChunkProcess(KnowledgeDocumentServiceImpl.java:421) ~[classes/:na]
+	at com.nageoffer.ai.ragent.knowledge.service.impl.KnowledgeDocumentServiceImpl.runChunkTask(KnowledgeDocumentServiceImpl.java:327) ~[classes/:na]
+	at com.nageoffer.ai.ragent.knowledge.service.impl.KnowledgeDocumentServiceImpl.lambda$startChunk$3(KnowledgeDocumentServiceImpl.java:281) ~[classes/:na]
+	at com.alibaba.ttl.TtlRunnable.run(TtlRunnable.java:60) ~[transmittable-thread-local-2.14.5.jar:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635) ~[na:na]
+	at java.base/java.lang.Thread.run(Thread.java:840) ~[na:na]
+
+2026-03-27T16:42:35.844+08:00  WARN 9476 --- [ragent-service] [hunk_executor_1] c.n.a.r.c.c.AbstractEmbeddingChunker     : Embedding batch failed, fallback to local vectors. modelId=qwen-emb-8b, provider=siliconflow
+
+java.lang.RuntimeException: 调用 SiliconFlow Embedding 失败: 调用 SiliconFlow Embedding 失败: HTTP 401 - "Invalid token"
+	at com.nageoffer.ai.ragent.infra.embedding.SiliconFlowEmbeddingClient.embedBatch(SiliconFlowEmbeddingClient.java:87) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	at com.nageoffer.ai.ragent.core.chunk.AbstractEmbeddingChunker.embedBatch(AbstractEmbeddingChunker.java:100) ~[classes/:na]
+	at com.nageoffer.ai.ragent.core.chunk.AbstractEmbeddingChunker.chunk(AbstractEmbeddingChunker.java:66) ~[classes/:na]
+	at com.nageoffer.ai.ragent.knowledge.service.impl.KnowledgeDocumentServiceImpl.runChunkProcess(KnowledgeDocumentServiceImpl.java:421) ~[classes/:na]
+	at com.nageoffer.ai.ragent.knowledge.service.impl.KnowledgeDocumentServiceImpl.runChunkTask(KnowledgeDocumentServiceImpl.java:327) ~[classes/:na]
+	at com.nageoffer.ai.ragent.knowledge.service.impl.KnowledgeDocumentServiceImpl.lambda$startChunk$3(KnowledgeDocumentServiceImpl.java:281) ~[classes/:na]
+	at com.alibaba.ttl.TtlRunnable.run(TtlRunnable.java:60) ~[transmittable-thread-local-2.14.5.jar:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635) ~[na:na]
+	at java.base/java.lang.Thread.run(Thread.java:840) ~[na:na]
+Caused by: com.nageoffer.ai.ragent.infra.http.ModelClientException: 调用 SiliconFlow Embedding 失败: HTTP 401 - "Invalid token"
+	at com.nageoffer.ai.ragent.infra.embedding.SiliconFlowEmbeddingClient.doEmbedOnce(SiliconFlowEmbeddingClient.java:124) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	at com.nageoffer.ai.ragent.infra.embedding.SiliconFlowEmbeddingClient.embedBatch(SiliconFlowEmbeddingClient.java:81) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	... 9 common frames omitted
+
+2026-03-27T16:42:35.926+08:00  INFO 9476 --- [ragent-service] [hunk_executor_1] c.n.a.r.r.c.v.MilvusVectorStoreService   : Milvus 删除指定文档的所有 chunk 向量索引成功, collection=yuanshenkb20260327, kbId=2037407325907623936, docId=2037407490534055936, deleteCnt=0
+2026-03-27T16:42:35.941+08:00  INFO 9476 --- [ragent-service] [hunk_executor_1] c.n.a.r.r.c.v.MilvusVectorStoreService   : Milvus chunk 建立/写入向量索引成功, collection=yuanshenkb20260327, rows=1
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  05:37 min
+[INFO] Finished at: 2026-03-27T16:44:05+08:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:3.5.7:run (default-cli) on project bootstrap: Process terminated with exit code: -1 -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException
+
+G:\Ragent2026\ragent>

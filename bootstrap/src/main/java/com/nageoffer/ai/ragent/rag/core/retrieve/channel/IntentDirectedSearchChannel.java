@@ -18,7 +18,10 @@
 package com.nageoffer.ai.ragent.rag.core.retrieve.channel;
 
 import cn.hutool.core.collection.CollUtil;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.nageoffer.ai.ragent.framework.convention.RetrievedChunk;
+import com.nageoffer.ai.ragent.knowledge.dao.entity.KnowledgeBaseDO;
+import com.nageoffer.ai.ragent.knowledge.dao.mapper.KnowledgeBaseMapper;
 import com.nageoffer.ai.ragent.rag.config.SearchChannelProperties;
 import com.nageoffer.ai.ragent.rag.core.intent.NodeScore;
 import com.nageoffer.ai.ragent.rag.core.retrieve.RetrieverService;
@@ -27,27 +30,28 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
 /**
- * 意图定向检索通道
- * <p>
- * 基于意图识别结果，在特定知识库中进行定向检索
- * 这是最精确的检索方式，优先级最高
+ * 意图定向检索通道。
  */
 @Slf4j
 @Component
 public class IntentDirectedSearchChannel implements SearchChannel {
 
     private final SearchChannelProperties properties;
+    private final KnowledgeBaseMapper knowledgeBaseMapper;
     private final IntentParallelRetriever parallelRetriever;
 
     public IntentDirectedSearchChannel(RetrieverService retrieverService,
                                        SearchChannelProperties properties,
+                                       KnowledgeBaseMapper knowledgeBaseMapper,
                                        @Qualifier("ragInnerRetrievalThreadPoolExecutor") Executor ragInnerRetrievalExecutor) {
         this.properties = properties;
+        this.knowledgeBaseMapper = knowledgeBaseMapper;
         this.parallelRetriever = new IntentParallelRetriever(retrieverService, ragInnerRetrievalExecutor);
     }
 
@@ -58,22 +62,17 @@ public class IntentDirectedSearchChannel implements SearchChannel {
 
     @Override
     public int getPriority() {
-        return 1;  // 最高优先级
+        return 1;
     }
 
     @Override
     public boolean isEnabled(SearchContext context) {
-        // 检查配置是否启用
         if (!properties.getChannels().getIntentDirected().isEnabled()) {
             return false;
         }
-
-        // 检查是否有 KB 意图（而不仅仅是有意图）
         if (CollUtil.isEmpty(context.getIntents())) {
             return false;
         }
-
-        // 提取 KB 意图，只有存在 KB 意图时才启用
         List<NodeScore> kbIntents = extractKbIntents(context);
         return CollUtil.isNotEmpty(kbIntents);
     }
@@ -81,13 +80,9 @@ public class IntentDirectedSearchChannel implements SearchChannel {
     @Override
     public SearchChannelResult search(SearchContext context) {
         long startTime = System.currentTimeMillis();
-
         try {
-            // 提取 KB 意图
             List<NodeScore> kbIntents = extractKbIntents(context);
-
             if (CollUtil.isEmpty(kbIntents)) {
-                log.warn("意图定向检索通道被启用，但未找到 KB 意图（不应该发生）");
                 return SearchChannelResult.builder()
                         .channelType(SearchChannelType.INTENT_DIRECTED)
                         .channelName(getName())
@@ -97,25 +92,22 @@ public class IntentDirectedSearchChannel implements SearchChannel {
                         .build();
             }
 
-            log.info("执行意图定向检索，识别出 {} 个 KB 意图", kbIntents.size());
-
-            // 并行检索所有意图对应的知识库
+            Map<String, String> embeddingModelByCollection = loadEmbeddingModelMap(kbIntents);
             int topKMultiplier = properties.getChannels().getIntentDirected().getTopKMultiplier();
-            List<RetrievedChunk> allChunks = retrieveByIntents(
+            List<RetrievedChunk> allChunks = parallelRetriever.executeParallelRetrieval(
                     context.getMainQuestion(),
                     kbIntents,
                     context.getTopK(),
-                    topKMultiplier
+                    topKMultiplier,
+                    embeddingModelByCollection::get
             );
 
-            // 计算置信度（基于意图分数）
             double confidence = kbIntents.stream()
                     .mapToDouble(NodeScore::getScore)
                     .max()
                     .orElse(0.0);
 
             long latency = System.currentTimeMillis() - startTime;
-
             log.info("意图定向检索完成，检索到 {} 个 Chunk，置信度：{}，耗时 {}ms",
                     allChunks.size(), confidence, latency);
 
@@ -127,7 +119,6 @@ public class IntentDirectedSearchChannel implements SearchChannel {
                     .latencyMs(latency)
                     .metadata(Map.of("intentCount", kbIntents.size()))
                     .build();
-
         } catch (Exception e) {
             log.error("意图定向检索失败", e);
             return SearchChannelResult.builder()
@@ -145,9 +136,6 @@ public class IntentDirectedSearchChannel implements SearchChannel {
         return SearchChannelType.INTENT_DIRECTED;
     }
 
-    /**
-     * 提取 KB 意图
-     */
     private List<NodeScore> extractKbIntents(SearchContext context) {
         double minScore = properties.getChannels().getIntentDirected().getMinIntentScore();
         return context.getIntents().stream()
@@ -158,13 +146,32 @@ public class IntentDirectedSearchChannel implements SearchChannel {
     }
 
     /**
-     * 根据意图列表并行检索
+     * 将意图命中的 collection 映射到对应知识库绑定的 embedding 模型。
      */
-    private List<RetrievedChunk> retrieveByIntents(String question,
-                                                   List<NodeScore> kbIntents,
-                                                   int fallbackTopK,
-                                                   int topKMultiplier) {
-        // 使用模板方法执行并行检索
-        return parallelRetriever.executeParallelRetrieval(question, kbIntents, fallbackTopK, topKMultiplier);
+    private Map<String, String> loadEmbeddingModelMap(List<NodeScore> kbIntents) {
+        List<String> collections = kbIntents.stream()
+                .map(NodeScore::getNode)
+                .filter(node -> node != null && node.getCollectionName() != null && !node.getCollectionName().isBlank())
+                .map(node -> node.getCollectionName().trim())
+                .distinct()
+                .toList();
+        if (collections.isEmpty()) {
+            return Map.of();
+        }
+
+        List<KnowledgeBaseDO> kbList = knowledgeBaseMapper.selectList(
+                Wrappers.lambdaQuery(KnowledgeBaseDO.class)
+                        .select(KnowledgeBaseDO::getCollectionName, KnowledgeBaseDO::getEmbeddingModel)
+                        .in(KnowledgeBaseDO::getCollectionName, collections)
+                        .eq(KnowledgeBaseDO::getDeleted, 0)
+        );
+
+        Map<String, String> mapping = new HashMap<>();
+        for (KnowledgeBaseDO kb : kbList) {
+            if (kb.getCollectionName() != null && !kb.getCollectionName().isBlank()) {
+                mapping.put(kb.getCollectionName(), kb.getEmbeddingModel());
+            }
+        }
+        return mapping;
     }
 }

@@ -1,12 +1,17 @@
-import type { ReactNode } from "react";
+﻿import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import type { SystemSettings } from "@/services/settingsService";
-import { getSystemSettings } from "@/services/settingsService";
+import type { EmbeddingSwitchInfo, SystemSettings } from "@/services/settingsService";
+import {
+  getEmbeddingSwitchInfo,
+  getSystemSettings,
+  switchEmbeddingProvider,
+} from "@/services/settingsService";
 import { getErrorMessage } from "@/utils/error";
 
 const BoolBadge = ({ value }: { value: boolean }) => (
@@ -24,13 +29,19 @@ function InfoItem({ label, value }: { label: string; value: ReactNode }) {
 
 export function SystemSettingsPage() {
   const [settings, setSettings] = useState<SystemSettings | null>(null);
+  const [switchInfo, setSwitchInfo] = useState<EmbeddingSwitchInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [switchingProvider, setSwitchingProvider] = useState<string | null>(null);
 
   const loadSettings = async () => {
     try {
       setLoading(true);
-      const data = await getSystemSettings();
-      setSettings(data);
+      const [settingsData, switchData] = await Promise.all([
+        getSystemSettings(),
+        getEmbeddingSwitchInfo(),
+      ]);
+      setSettings(settingsData);
+      setSwitchInfo(switchData);
     } catch (error) {
       toast.error(getErrorMessage(error, "加载系统配置失败"));
       console.error(error);
@@ -62,11 +73,25 @@ export function SystemSettingsPage() {
   const { rag, ai } = settings;
   const providers = Object.entries(ai.providers || {});
 
+  const handleSwitchEmbeddingProvider = async (provider: string) => {
+    try {
+      setSwitchingProvider(provider);
+      const latest = await switchEmbeddingProvider(provider);
+      setSwitchInfo(latest);
+      toast.success(`已切换到 ${provider} Embedding`);
+    } catch (error) {
+      toast.error(getErrorMessage(error, "切换 Embedding 失败"));
+      console.error(error);
+    } finally {
+      setSwitchingProvider(null);
+    }
+  };
+
   return (
     <div className="admin-page">
       <div className="admin-page-header">
         <div>
-          <h1 className="admin-page-title">系统配置</h1>
+          <h1 className="admin-page-title">系统设置</h1>
           <p className="admin-page-subtitle">只读展示当前 application 配置</p>
         </div>
       </div>
@@ -220,7 +245,7 @@ export function SystemSettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Embedding 模型配置</CardTitle>
-          <CardDescription>向量化模型列表</CardDescription>
+          <CardDescription>向量模型候选列表</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
@@ -248,6 +273,45 @@ export function SystemSettingsPage() {
               ))}
             </TableBody>
           </Table>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Embedding 运行时切换</CardTitle>
+          <CardDescription>一键切换默认 Embedding Provider，后续可随时切回</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <InfoItem label="Active Provider" value={switchInfo?.activeProvider || "-"} />
+            <InfoItem
+              label="Active Model"
+              value={
+                switchInfo?.activeModelId
+                  ? `${switchInfo.activeModelId} (${switchInfo.activeDimension || "-"})`
+                  : "-"
+              }
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {(switchInfo?.providers || []).map((item) => {
+              const isActive = item.provider === switchInfo?.activeProvider;
+              const isSwitching = switchingProvider === item.provider;
+              return (
+                <Button
+                  key={item.provider}
+                  variant={isActive ? "default" : "outline"}
+                  disabled={isActive || isSwitching}
+                  onClick={() => handleSwitchEmbeddingProvider(item.provider)}
+                >
+                  {isSwitching ? "切换中..." : `切到 ${item.provider}`}
+                </Button>
+              );
+            })}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            说明：该切换会影响默认向量模型与新建知识库的默认选择，已有知识库仍按其绑定模型执行。
+          </div>
         </CardContent>
       </Card>
 

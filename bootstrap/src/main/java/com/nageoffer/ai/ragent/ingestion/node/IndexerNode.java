@@ -101,7 +101,7 @@ public class IndexerNode implements IngestionNode {
             return NodeResult.fail(ex);
         }
 
-        ensureVectorSpace(collectionName);
+        ensureVectorSpace(collectionName, expectedDim);
         List<JsonObject> rows = buildRows(context, chunks, vectorArray, settings.getMetadataFields());
         insertRows(collectionName, rows);
         return NodeResult.ok("已写入 " + rows.size() + " 个分块到集合 " + collectionName);
@@ -121,7 +121,7 @@ public class IndexerNode implements IngestionNode {
         return ragDefaultProperties.getCollectionName();
     }
 
-    private void ensureVectorSpace(String collectionName) {
+    private void ensureVectorSpace(String collectionName, int dimension) {
         boolean vectorSpaceExists = vectorStoreAdmin.vectorSpaceExists(VectorSpaceId.builder()
                 .logicalName(collectionName)
                 .build());
@@ -134,6 +134,7 @@ public class IndexerNode implements IngestionNode {
                         .logicalName(collectionName)
                         .build())
                 .remark("RAG向量存储空间")
+                .dimension(dimension > 0 ? dimension : ragDefaultProperties.getDimension())
                 .build();
         vectorStoreAdmin.ensureVectorSpace(spaceSpec);
     }

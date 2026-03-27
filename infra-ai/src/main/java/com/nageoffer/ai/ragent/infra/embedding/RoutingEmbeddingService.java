@@ -123,6 +123,13 @@ public class RoutingEmbeddingService implements EmbeddingService {
         return target.candidate().getDimension();
     }
 
+    @Override
+    public int dimension(String modelId) {
+        ModelTarget target = resolveTarget(modelId);
+        Integer dim = target.candidate().getDimension();
+        return dim == null ? 0 : dim;
+    }
+
     private ModelTarget resolveTarget(String modelId) {
         if (!StringUtils.hasText(modelId)) {
             throw new RemoteException("Embedding 模型ID不能为空");

@@ -69,6 +69,29 @@ export interface ModelCandidate {
   supportsThinking?: boolean | null;
 }
 
+export interface EmbeddingSwitchProvider {
+  provider: string;
+  modelId: string;
+  model: string;
+  dimension?: number | null;
+}
+
+export interface EmbeddingSwitchInfo {
+  activeProvider?: string | null;
+  activeModelId?: string | null;
+  activeModel?: string | null;
+  activeDimension?: number | null;
+  providers: EmbeddingSwitchProvider[];
+}
+
 export async function getSystemSettings(): Promise<SystemSettings> {
   return api.get<SystemSettings, SystemSettings>("/rag/settings");
+}
+
+export async function getEmbeddingSwitchInfo(): Promise<EmbeddingSwitchInfo> {
+  return api.get<EmbeddingSwitchInfo, EmbeddingSwitchInfo>("/rag/settings/embedding-switch");
+}
+
+export async function switchEmbeddingProvider(provider: string): Promise<EmbeddingSwitchInfo> {
+  return api.post<EmbeddingSwitchInfo, EmbeddingSwitchInfo>("/rag/settings/embedding-switch", { provider });
 }

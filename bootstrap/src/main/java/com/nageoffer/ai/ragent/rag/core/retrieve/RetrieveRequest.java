@@ -55,6 +55,13 @@ public class RetrieveRequest {
     private String collectionName;
 
     /**
+     * 本次检索使用的 embedding 模型ID（可选）。
+     * <p>
+     * 不传时走系统当前默认模型，传入时可按知识库模型精确生成查询向量。
+     */
+    private String embeddingModel;
+
+    /**
      * 元数据等值过滤条件（扩展项）：
      * - key 为 metadata 字段名
      * - value 为匹配值

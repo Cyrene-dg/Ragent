@@ -1,0 +1,246 @@
+[INFO] Scanning for projects...
+[WARNING] 
+[WARNING] Some problems were encountered while building the effective model for com.nageoffer.ai:bootstrap:jar:0.0.1-SNAPSHOT
+[WARNING] 'build.plugins.plugin.version' for org.apache.maven.plugins:maven-compiler-plugin is missing. @ com.nageoffer.ai:ragent:0.0.1-SNAPSHOT, G:\Ragent2026\ragent\pom.xml, line 162, column 21
+[WARNING] 'build.plugins.plugin.version' for org.apache.maven.plugins:maven-surefire-plugin is missing. @ com.nageoffer.ai:ragent:0.0.1-SNAPSHOT, G:\Ragent2026\ragent\pom.xml, line 185, column 21
+[WARNING] 
+[WARNING] It is highly recommended to fix these problems because they threaten the stability of your build.
+[WARNING] 
+[WARNING] For this reason, future Maven versions might no longer support building such malformed projects.
+[WARNING] 
+[INFO] 
+[INFO] ---------------------< com.nageoffer.ai:bootstrap >---------------------
+[INFO] Building bootstrap 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.5.7:run (default-cli) > test-compile @ bootstrap >>>
+[INFO] 
+[INFO] --- dependency:3.7.0:properties (default) @ bootstrap ---
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ bootstrap ---
+[WARNING] Using platform encoding (GBK actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] Copying 22 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ bootstrap ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- spotless:2.22.1:apply (default) @ bootstrap ---
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ bootstrap ---
+[WARNING] Using platform encoding (GBK actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] skip non existing resourceDirectory G:\Ragent2026\ragent\bootstrap\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ bootstrap ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] <<< spring-boot:3.5.7:run (default-cli) < test-compile @ bootstrap <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:3.5.7:run (default-cli) @ bootstrap ---
+[INFO] Attaching agents: []
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.7)
+
+2026-03-27T14:26:35.251+08:00  INFO 11332 --- [ragent-service] [           main] c.nageoffer.ai.ragent.RagentApplication  : Starting RagentApplication using Java 17.0.18 with PID 11332 (G:\Ragent2026\ragent\bootstrap\target\classes started by Lenovo in G:\Ragent2026\ragent\bootstrap)
+2026-03-27T14:26:35.253+08:00  INFO 11332 --- [ragent-service] [           main] c.nageoffer.ai.ragent.RagentApplication  : No active profile set, falling back to 1 default profile: "default"
+2026-03-27T14:26:35.888+08:00  INFO 11332 --- [ragent-service] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-03-27T14:26:35.890+08:00  INFO 11332 --- [ragent-service] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-03-27T14:26:35.939+08:00  INFO 11332 --- [ragent-service] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 38 ms. Found 0 Redis repository interfaces.
+2026-03-27T14:26:36.598+08:00  INFO 11332 --- [ragent-service] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 9090 (http)
+2026-03-27T14:26:36.607+08:00  INFO 11332 --- [ragent-service] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-03-27T14:26:36.607+08:00  INFO 11332 --- [ragent-service] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.48]
+2026-03-27T14:26:36.683+08:00  INFO 11332 --- [ragent-service] [           main] o.a.c.c.C.[.[localhost].[/api/ragent]    : Initializing Spring embedded WebApplicationContext
+2026-03-27T14:26:36.684+08:00  INFO 11332 --- [ragent-service] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1396 ms
+ _ _   |_  _ _|_. ___ _ |    _ 
+| | |\/|_)(_| | |_\  |_)||_|_\ 
+     /               |         
+                        3.5.14 
+2026-03-27T14:26:39.319+08:00  INFO 11332 --- [ragent-service] [           main] org.redisson.Version                     : Redisson 4.0.0
+2026-03-27T14:26:39.913+08:00  INFO 11332 --- [ragent-service] [isson-netty-1-4] o.redisson.connection.ConnectionsHolder  : 1 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-03-27T14:26:39.993+08:00  INFO 11332 --- [ragent-service] [sson-netty-1-19] o.redisson.connection.ConnectionsHolder  : 24 connections initialized for 127.0.0.1/127.0.0.1:6379
+2026-03-27T14:26:40.867+08:00  INFO 11332 --- [ragent-service] [           main] com.zaxxer.hikari.HikariDataSource       : RagentHikariPool - Starting...
+2026-03-27T14:26:41.152+08:00  INFO 11332 --- [ragent-service] [           main] com.zaxxer.hikari.pool.HikariPool        : RagentHikariPool - Added connection com.mysql.cj.jdbc.ConnectionImpl@1dc47df3
+2026-03-27T14:26:41.155+08:00  INFO 11332 --- [ragent-service] [           main] com.zaxxer.hikari.HikariDataSource       : RagentHikariPool - Start completed.
+2026-03-27T14:26:41.200+08:00  INFO 11332 --- [ragent-service] [           main] c.n.a.r.r.c.r.QueryTermMappingService    : 查询归一化映射规则加载完成, 共加载 0 条规则
+2026-03-27T14:26:41.262+08:00  INFO 11332 --- [ragent-service] [           main] c.n.a.r.r.c.mcp.DefaultMCPToolRegistry   : MCP 工具注册跳过, 未发现任何工具执行器
+2026-03-27T14:26:41.263+08:00  INFO 11332 --- [ragent-service] [           main] c.n.a.r.r.c.mcp.DefaultMCPToolRegistry   : MCP 工具自动注册完成, 共注册 0 个工具
+2026-03-27T14:26:41.349+08:00  INFO 11332 --- [ragent-service] [           main] n.a.r.r.c.m.c.MCPClientAutoConfiguration : 连接 MCP Server: name=default, url=http://localhost:9099
+2026-03-27T14:26:41.419+08:00  INFO 11332 --- [ragent-service] [           main] n.a.r.r.c.m.c.MCPClientAutoConfiguration : MCP Server [default] 返回 3 个工具
+2026-03-27T14:26:41.419+08:00  INFO 11332 --- [ragent-service] [           main] c.n.a.r.r.c.mcp.DefaultMCPToolRegistry   : MCP 工具注册成功, toolId: ticket_query
+2026-03-27T14:26:41.419+08:00  INFO 11332 --- [ragent-service] [           main] n.a.r.r.c.m.c.MCPClientAutoConfiguration : 注册远程 MCP 工具: toolId=ticket_query, server=default
+2026-03-27T14:26:41.419+08:00  INFO 11332 --- [ragent-service] [           main] c.n.a.r.r.c.mcp.DefaultMCPToolRegistry   : MCP 工具注册成功, toolId: sales_query
+2026-03-27T14:26:41.420+08:00  INFO 11332 --- [ragent-service] [           main] n.a.r.r.c.m.c.MCPClientAutoConfiguration : 注册远程 MCP 工具: toolId=sales_query, server=default
+2026-03-27T14:26:41.420+08:00  INFO 11332 --- [ragent-service] [           main] c.n.a.r.r.c.mcp.DefaultMCPToolRegistry   : MCP 工具注册成功, toolId: weather_query
+2026-03-27T14:26:41.420+08:00  INFO 11332 --- [ragent-service] [           main] n.a.r.r.c.m.c.MCPClientAutoConfiguration : 注册远程 MCP 工具: toolId=weather_query, server=default
+2026-03-27T14:26:41.537+08:00  INFO 11332 --- [ragent-service] [           main] c.n.a.r.f.d.SnowflakeIdInitializer       : 分布式Snowflake初始化完成, workerId: 14, datacenterId: 0
+2026-03-27T14:26:41.989+08:00  INFO 11332 --- [ragent-service] [           main] m.e.s.MybatisPlusApplicationContextAware : Register ApplicationContext instances org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@5829e4f4
+2026-03-27T14:26:42.309+08:00  INFO 11332 --- [ragent-service] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 9090 (http) with context path '/api/ragent'
+2026-03-27T14:26:47.836+08:00  INFO 11332 --- [ragent-service] [           main] n.a.r.f.m.c.RedisStreamConsumerBootstrap : Redis Stream 消费者注册成功，bean: demoMessageConsumer, topic: mq:demo:topic, consumerGroup: demo-consumer-group, consumerName: LAPTOP-909HVVE4-11332
+2026-03-27T14:26:47.851+08:00  INFO 11332 --- [ragent-service] [           main] c.nageoffer.ai.ragent.RagentApplication  : Started RagentApplication in 12.911 seconds (process running for 13.293)
+2026-03-27T14:27:15.709+08:00  INFO 11332 --- [ragent-service] [nio-9090-exec-1] o.a.c.c.C.[.[localhost].[/api/ragent]    : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-27T14:27:15.710+08:00  INFO 11332 --- [ragent-service] [nio-9090-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-03-27T14:27:15.720+08:00  INFO 11332 --- [ragent-service] [nio-9090-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 6 ms
+2026-03-27T14:27:16.013+08:00  INFO 11332 --- [ragent-service] [ntry_executor_0] c.n.a.r.r.s.impl.RAGChatServiceImpl      : 开始流式对话，会话ID：2037416140686286848，任务ID：2037416140875030529
+2026-03-27T14:27:23.174+08:00  INFO 11332 --- [ragent-service] [ntry_executor_0] .n.a.r.r.c.r.MultiQuestionRewriteService : RAG用户问题查询改写+拆分：
+原始问题：原神是什么
+归一化后：原神是什么
+改写结果：原神是什么
+子问题：[原神是什么]
+
+2026-03-27T14:27:27.758+08:00  INFO 11332 --- [ragent-service] [sify_executor_0] c.n.a.r.r.c.i.DefaultIntentClassifier    : 当前问题：原神是什么
+意图识别树如下所示：[
+    {
+        "node": {
+            "id": "kb_yuanshen_intro_20260327",
+            "kbId": "2037407325907623936",
+            "name": "??????",
+            "description": "???????????????????",
+            "level": "TOPIC",
+            "parentId": "ROOT",
+            "examples": [
+                "\"?????\"",
+                "\"??????\"",
+                "\"?????????\""
+            ],
+            "fullPath": "??????",
+            "kind": "KB",
+            "collectionName": "yuanshenkb20260327",
+            "topK": 5
+        },
+        "score": 0.95
+    }
+]
+
+2026-03-27T14:27:27.784+08:00  INFO 11332 --- [ragent-service] [text_executor_0] .n.a.r.r.c.r.MultiChannelRetrievalEngine : 启用的检索通道：[IntentDirectedSearch]
+2026-03-27T14:27:27.786+08:00  INFO 11332 --- [ragent-service] [eval_executor_0] .n.a.r.r.c.r.MultiChannelRetrievalEngine : 执行检索通道：IntentDirectedSearch
+2026-03-27T14:27:27.786+08:00  INFO 11332 --- [ragent-service] [eval_executor_0] .a.r.r.c.r.c.IntentDirectedSearchChannel : 执行意图定向检索，识别出 1 个 KB 意图
+2026-03-27T14:27:27.798+08:00  WARN 11332 --- [ragent-service] [eval_executor_0] c.n.a.r.i.model.ModelRoutingExecutor     : Embedding model failed, fallback to next. modelId=qwen-emb-local, provider=ollama
+
+com.nageoffer.ai.ragent.infra.http.ModelClientException: Ollama embedding 请求失败: Failed to connect to localhost/[0:0:0:0:0:0:0:1]:11434
+	at com.nageoffer.ai.ragent.infra.embedding.OllamaEmbeddingClient.embed(OllamaEmbeddingClient.java:85) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	at com.nageoffer.ai.ragent.infra.embedding.RoutingEmbeddingService.lambda$embed$1(RoutingEmbeddingService.java:81) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	at com.nageoffer.ai.ragent.infra.model.ModelRoutingExecutor.executeWithFallback(ModelRoutingExecutor.java:75) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	at com.nageoffer.ai.ragent.infra.embedding.RoutingEmbeddingService.embed(RoutingEmbeddingService.java:77) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	at com.nageoffer.ai.ragent.rag.core.retrieve.MilvusRetrieverService.retrieve(MilvusRetrieverService.java:50) ~[classes/:na]
+	at com.nageoffer.ai.ragent.rag.core.retrieve.channel.strategy.IntentParallelRetriever.createRetrievalTask(IntentParallelRetriever.java:70) ~[classes/:na]
+	at com.nageoffer.ai.ragent.rag.core.retrieve.channel.strategy.IntentParallelRetriever.createRetrievalTask(IntentParallelRetriever.java:35) ~[classes/:na]
+	at com.nageoffer.ai.ragent.rag.core.retrieve.channel.AbstractParallelRetriever.lambda$executeParallelRetrieval$0(AbstractParallelRetriever.java:71) ~[classes/:na]
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1768) ~[na:na]
+	at com.alibaba.ttl.TtlRunnable.run(TtlRunnable.java:60) ~[transmittable-thread-local-2.14.5.jar:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635) ~[na:na]
+	at java.base/java.lang.Thread.run(Thread.java:840) ~[na:na]
+Caused by: java.net.ConnectException: Failed to connect to localhost/[0:0:0:0:0:0:0:1]:11434
+	at okhttp3.internal.connection.RealConnection.connectSocket(RealConnection.kt:297) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.RealConnection.connect(RealConnection.kt:207) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.ExchangeFinder.findConnection(ExchangeFinder.kt:226) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.ExchangeFinder.findHealthyConnection(ExchangeFinder.kt:106) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.ExchangeFinder.find(ExchangeFinder.kt:74) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.RealCall.initExchange$okhttp(RealCall.kt:255) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.ConnectInterceptor.intercept(ConnectInterceptor.kt:32) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.cache.CacheInterceptor.intercept(CacheInterceptor.kt:95) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.http.BridgeInterceptor.intercept(BridgeInterceptor.kt:83) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.http.RetryAndFollowUpInterceptor.intercept(RetryAndFollowUpInterceptor.kt:76) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.kt:109) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.RealCall.getResponseWithInterceptorChain$okhttp(RealCall.kt:201) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.RealCall.execute(RealCall.kt:154) ~[okhttp-4.12.0.jar:na]
+	at com.nageoffer.ai.ragent.infra.embedding.OllamaEmbeddingClient.embed(OllamaEmbeddingClient.java:73) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	... 12 common frames omitted
+	Suppressed: java.net.ConnectException: Failed to connect to localhost/127.0.0.1:11434
+		... 29 common frames omitted
+	Caused by: java.net.ConnectException: Connection refused: getsockopt
+		at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+		at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:684)
+		at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:547)
+		at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:602)
+		at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+		at java.base/java.net.Socket.connect(Socket.java:633)
+		at okhttp3.internal.platform.Platform.connectSocket(Platform.kt:128)
+		at okhttp3.internal.connection.RealConnection.connectSocket(RealConnection.kt:295)
+		... 28 common frames omitted
+Caused by: java.net.ConnectException: Connection refused: getsockopt
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method) ~[na:na]
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:684) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:547) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:602) ~[na:na]
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327) ~[na:na]
+	at java.base/java.net.Socket.connect(Socket.java:633) ~[na:na]
+	at okhttp3.internal.platform.Platform.connectSocket(Platform.kt:128) ~[okhttp-4.12.0.jar:na]
+	at okhttp3.internal.connection.RealConnection.connectSocket(RealConnection.kt:295) ~[okhttp-4.12.0.jar:na]
+	... 28 common frames omitted
+
+2026-03-27T14:27:28.188+08:00 ERROR 11332 --- [ragent-service] [eval_executor_0] c.n.a.r.i.e.SiliconFlowEmbeddingClient   : SiliconFlow embeddings HTTP error: status=401, body="Invalid token"
+2026-03-27T14:27:28.188+08:00 ERROR 11332 --- [ragent-service] [eval_executor_0] c.n.a.r.i.e.SiliconFlowEmbeddingClient   : SiliconFlow embeddings 调用失败
+
+com.nageoffer.ai.ragent.infra.http.ModelClientException: 调用 SiliconFlow Embedding 失败: HTTP 401 - "Invalid token"
+	at com.nageoffer.ai.ragent.infra.embedding.SiliconFlowEmbeddingClient.doEmbedOnce(SiliconFlowEmbeddingClient.java:124) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	at com.nageoffer.ai.ragent.infra.embedding.SiliconFlowEmbeddingClient.embedBatch(SiliconFlowEmbeddingClient.java:81) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	at com.nageoffer.ai.ragent.infra.embedding.SiliconFlowEmbeddingClient.embed(SiliconFlowEmbeddingClient.java:66) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	at com.nageoffer.ai.ragent.infra.embedding.RoutingEmbeddingService.lambda$embed$1(RoutingEmbeddingService.java:81) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	at com.nageoffer.ai.ragent.infra.model.ModelRoutingExecutor.executeWithFallback(ModelRoutingExecutor.java:75) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	at com.nageoffer.ai.ragent.infra.embedding.RoutingEmbeddingService.embed(RoutingEmbeddingService.java:77) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	at com.nageoffer.ai.ragent.rag.core.retrieve.MilvusRetrieverService.retrieve(MilvusRetrieverService.java:50) ~[classes/:na]
+	at com.nageoffer.ai.ragent.rag.core.retrieve.channel.strategy.IntentParallelRetriever.createRetrievalTask(IntentParallelRetriever.java:70) ~[classes/:na]
+	at com.nageoffer.ai.ragent.rag.core.retrieve.channel.strategy.IntentParallelRetriever.createRetrievalTask(IntentParallelRetriever.java:35) ~[classes/:na]
+	at com.nageoffer.ai.ragent.rag.core.retrieve.channel.AbstractParallelRetriever.lambda$executeParallelRetrieval$0(AbstractParallelRetriever.java:71) ~[classes/:na]
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1768) ~[na:na]
+	at com.alibaba.ttl.TtlRunnable.run(TtlRunnable.java:60) ~[transmittable-thread-local-2.14.5.jar:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635) ~[na:na]
+	at java.base/java.lang.Thread.run(Thread.java:840) ~[na:na]
+
+2026-03-27T14:27:28.190+08:00  WARN 11332 --- [ragent-service] [eval_executor_0] c.n.a.r.i.model.ModelRoutingExecutor     : Embedding model failed, fallback to next. modelId=qwen-emb-8b, provider=siliconflow
+
+java.lang.RuntimeException: 调用 SiliconFlow Embedding 失败: 调用 SiliconFlow Embedding 失败: HTTP 401 - "Invalid token"
+	at com.nageoffer.ai.ragent.infra.embedding.SiliconFlowEmbeddingClient.embedBatch(SiliconFlowEmbeddingClient.java:87) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	at com.nageoffer.ai.ragent.infra.embedding.SiliconFlowEmbeddingClient.embed(SiliconFlowEmbeddingClient.java:66) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	at com.nageoffer.ai.ragent.infra.embedding.RoutingEmbeddingService.lambda$embed$1(RoutingEmbeddingService.java:81) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	at com.nageoffer.ai.ragent.infra.model.ModelRoutingExecutor.executeWithFallback(ModelRoutingExecutor.java:75) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	at com.nageoffer.ai.ragent.infra.embedding.RoutingEmbeddingService.embed(RoutingEmbeddingService.java:77) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	at com.nageoffer.ai.ragent.rag.core.retrieve.MilvusRetrieverService.retrieve(MilvusRetrieverService.java:50) ~[classes/:na]
+	at com.nageoffer.ai.ragent.rag.core.retrieve.channel.strategy.IntentParallelRetriever.createRetrievalTask(IntentParallelRetriever.java:70) ~[classes/:na]
+	at com.nageoffer.ai.ragent.rag.core.retrieve.channel.strategy.IntentParallelRetriever.createRetrievalTask(IntentParallelRetriever.java:35) ~[classes/:na]
+	at com.nageoffer.ai.ragent.rag.core.retrieve.channel.AbstractParallelRetriever.lambda$executeParallelRetrieval$0(AbstractParallelRetriever.java:71) ~[classes/:na]
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1768) ~[na:na]
+	at com.alibaba.ttl.TtlRunnable.run(TtlRunnable.java:60) ~[transmittable-thread-local-2.14.5.jar:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635) ~[na:na]
+	at java.base/java.lang.Thread.run(Thread.java:840) ~[na:na]
+Caused by: com.nageoffer.ai.ragent.infra.http.ModelClientException: 调用 SiliconFlow Embedding 失败: HTTP 401 - "Invalid token"
+	at com.nageoffer.ai.ragent.infra.embedding.SiliconFlowEmbeddingClient.doEmbedOnce(SiliconFlowEmbeddingClient.java:124) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	at com.nageoffer.ai.ragent.infra.embedding.SiliconFlowEmbeddingClient.embedBatch(SiliconFlowEmbeddingClient.java:81) ~[infra-ai-0.0.1-SNAPSHOT.jar:na]
+	... 13 common frames omitted
+
+2026-03-27T14:27:28.356+08:00  INFO 11332 --- [ragent-service] [eval_executor_0] .n.a.r.r.c.r.c.AbstractParallelRetriever : 意图检索 检索统计 - 总目标数: 1, 成功: 1, 失败: 0, 检索到 Chunk 总数: 1
+2026-03-27T14:27:28.357+08:00  INFO 11332 --- [ragent-service] [eval_executor_0] .a.r.r.c.r.c.IntentDirectedSearchChannel : 意图定向检索完成，检索到 1 个 Chunk，置信度：0.95，耗时 571ms
+2026-03-27T14:27:28.358+08:00  INFO 11332 --- [ragent-service] [text_executor_0] .n.a.r.r.c.r.MultiChannelRetrievalEngine : 通道 IntentDirectedSearch 完成 ? - 检索到 1 个 Chunk，置信度：0.95，耗时：571ms
+2026-03-27T14:27:28.358+08:00  INFO 11332 --- [ragent-service] [text_executor_0] .n.a.r.r.c.r.MultiChannelRetrievalEngine : 多通道检索统计 - 总通道数: 1, 有结果: 1, 无结果: 0, Chunk 总数: 1
+2026-03-27T14:27:28.360+08:00  INFO 11332 --- [ragent-service] [text_executor_0] .n.a.r.r.c.r.MultiChannelRetrievalEngine : 后置处理器 Deduplication 完成 - 输入: 1 个 Chunk, 输出: 1 个 Chunk, 变化: 0
+2026-03-27T14:27:28.361+08:00  INFO 11332 --- [ragent-service] [text_executor_0] .n.a.r.r.c.r.MultiChannelRetrievalEngine : 后置处理器 Rerank 完成 - 输入: 1 个 Chunk, 输出: 1 个 Chunk, 变化: 0
+2026-03-27T14:27:28.361+08:00  INFO 11332 --- [ragent-service] [text_executor_0] .n.a.r.r.c.r.MultiChannelRetrievalEngine : 后置处理器链执行完成 - 初始: 1 个 Chunk, 最终: 1 个 Chunk
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  05:34 min
+[INFO] Finished at: 2026-03-27T14:32:03+08:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:3.5.7:run (default-cli) on project bootstrap: Process terminated with exit code: -1 -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException
+
+G:\Ragent2026\ragent>

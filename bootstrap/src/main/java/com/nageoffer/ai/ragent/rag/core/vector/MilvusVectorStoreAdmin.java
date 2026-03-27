@@ -44,6 +44,9 @@ public class MilvusVectorStoreAdmin implements VectorStoreAdmin {
     @Override
     public void ensureVectorSpace(VectorSpaceSpec spec) {
         String logicalName = spec.getSpaceId().getLogicalName();
+        int dimension = spec.getDimension() != null && spec.getDimension() > 0
+                ? spec.getDimension()
+                : ragDefaultProperties.getDimension();
         boolean exists = Boolean.TRUE.equals(milvusClient.hasCollection(
                 HasCollectionReq.builder().collectionName(logicalName).build()
         ));
@@ -82,7 +85,7 @@ public class MilvusVectorStoreAdmin implements VectorStoreAdmin {
                 CreateCollectionReq.FieldSchema.builder()
                         .name("embedding")
                         .dataType(DataType.FloatVector)
-                        .dimension(ragDefaultProperties.getDimension())
+                        .dimension(dimension)
                         .build()
         );
 

@@ -27,36 +27,39 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.concurrent.Executor;
+import java.util.function.Function;
 
 /**
- * 意图并行检索器
- * 继承模板类，实现意图特定的检索逻辑
+ * 意图并行检索器。
  */
 @Slf4j
 public class IntentParallelRetriever extends AbstractParallelRetriever<IntentParallelRetriever.IntentTask> {
 
     private final RetrieverService retrieverService;
 
-    public record IntentTask(NodeScore nodeScore, int intentTopK) {
+    public record IntentTask(NodeScore nodeScore, int intentTopK, String embeddingModel) {
     }
 
-    public IntentParallelRetriever(RetrieverService retrieverService,
-                                   Executor executor) {
+    public IntentParallelRetriever(RetrieverService retrieverService, Executor executor) {
         super(executor);
         this.retrieverService = retrieverService;
     }
 
     /**
-     * 执行并行检索（重载方法，支持动态 TopK 计算）
+     * 执行意图并行检索。
+     *
+     * @param embeddingModelResolver 根据 collectionName 解析 embedding 模型ID
      */
     public List<RetrievedChunk> executeParallelRetrieval(String question,
                                                          List<NodeScore> targets,
                                                          int fallbackTopK,
-                                                         int topKMultiplier) {
+                                                         int topKMultiplier,
+                                                         Function<String, String> embeddingModelResolver) {
         List<IntentTask> intentTasks = targets.stream()
                 .map(nodeScore -> new IntentTask(
                         nodeScore,
-                        resolveIntentTopK(nodeScore, fallbackTopK, topKMultiplier)
+                        resolveIntentTopK(nodeScore, fallbackTopK, topKMultiplier),
+                        resolveEmbeddingModel(nodeScore, embeddingModelResolver)
                 ))
                 .toList();
         return super.executeParallelRetrieval(question, intentTasks, fallbackTopK);
@@ -70,6 +73,7 @@ public class IntentParallelRetriever extends AbstractParallelRetriever<IntentPar
             return retrieverService.retrieve(
                     RetrieveRequest.builder()
                             .collectionName(node.getCollectionName())
+                            .embeddingModel(task.embeddingModel())
                             .query(question)
                             .topK(task.intentTopK())
                             .build()
@@ -93,8 +97,15 @@ public class IntentParallelRetriever extends AbstractParallelRetriever<IntentPar
         return "意图检索";
     }
 
+    private String resolveEmbeddingModel(NodeScore nodeScore, Function<String, String> embeddingModelResolver) {
+        if (nodeScore == null || nodeScore.getNode() == null || embeddingModelResolver == null) {
+            return null;
+        }
+        return embeddingModelResolver.apply(nodeScore.getNode().getCollectionName());
+    }
+
     /**
-     * 计算单个意图节点检索 TopK
+     * 计算单个意图节点检索 TopK。
      */
     private int resolveIntentTopK(NodeScore nodeScore, int fallbackTopK, int topKMultiplier) {
         int baseTopK = fallbackTopK;

@@ -93,4 +93,16 @@ public interface EmbeddingService {
     default int dimension() {
         return 0;
     }
+
+    /**
+     * 返回指定模型的向量维度。
+     * <p>
+     * 用于按知识库绑定模型时进行维度校验与建表。
+     *
+     * @param modelId 模型ID
+     * @return 向量维度，未知时返回 0
+     */
+    default int dimension(String modelId) {
+        return dimension();
+    }
 }

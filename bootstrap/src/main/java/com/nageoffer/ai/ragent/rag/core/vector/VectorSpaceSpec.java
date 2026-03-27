@@ -37,4 +37,9 @@ public class VectorSpaceSpec {
      * 备注
      */
     private String remark;
+
+    /**
+     * 向量维度（可选）。
+     */
+    private Integer dimension;
 }

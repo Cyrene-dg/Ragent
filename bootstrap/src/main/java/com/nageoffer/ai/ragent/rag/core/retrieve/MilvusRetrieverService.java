@@ -47,7 +47,10 @@ public class MilvusRetrieverService implements RetrieverService {
 
     @Override
     public List<RetrievedChunk> retrieve(RetrieveRequest retrieveParam) {
-        List<Float> emb = embeddingService.embed(retrieveParam.getQuery());
+        // 支持按知识库绑定的模型生成查询向量，避免跨模型维度不一致。
+        List<Float> emb = StrUtil.isBlank(retrieveParam.getEmbeddingModel())
+                ? embeddingService.embed(retrieveParam.getQuery())
+                : embeddingService.embed(retrieveParam.getQuery(), retrieveParam.getEmbeddingModel());
         float[] vec = toArray(emb);
 
         float[] norm = normalize(vec);

@@ -34,6 +34,7 @@ import com.nageoffer.ai.ragent.knowledge.dao.mapper.KnowledgeDocumentMapper;
 import com.nageoffer.ai.ragent.framework.context.UserContext;
 import com.nageoffer.ai.ragent.framework.exception.ClientException;
 import com.nageoffer.ai.ragent.framework.exception.ServiceException;
+import com.nageoffer.ai.ragent.infra.embedding.EmbeddingService;
 import com.nageoffer.ai.ragent.rag.core.vector.VectorSpaceId;
 import com.nageoffer.ai.ragent.rag.core.vector.VectorSpaceSpec;
 import com.nageoffer.ai.ragent.rag.core.vector.VectorStoreAdmin;
@@ -61,11 +62,13 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     private final KnowledgeBaseMapper knowledgeBaseMapper;
     private final KnowledgeDocumentMapper knowledgeDocumentMapper;
     private final VectorStoreAdmin vectorStoreAdmin;
+    private final EmbeddingService embeddingService;
     private final S3Client s3Client;
 
     @Transactional
     @Override
     public String create(KnowledgeBaseCreateRequest requestParam) {
+        validateCreateRequest(requestParam);
         // 名称重复校验
         String name = requestParam.getName().replaceAll("\\s+", "");
         Long count = knowledgeBaseMapper.selectCount(
@@ -106,10 +109,43 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
                         .logicalName(requestParam.getCollectionName())
                         .build())
                 .remark(requestParam.getName())
+                // 以知识库绑定的 embedding 模型维度建表，避免后续写入出现维度不匹配。
+                .dimension(resolveEmbeddingDimension(requestParam.getEmbeddingModel()))
                 .build();
         vectorStoreAdmin.ensureVectorSpace(spaceSpec);
 
         return String.valueOf(kbDO.getId());
+    }
+
+    private void validateCreateRequest(KnowledgeBaseCreateRequest requestParam) {
+        if (requestParam == null) {
+            throw new ClientException("创建知识库请求不能为空");
+        }
+        if (!StringUtils.hasText(requestParam.getName())) {
+            throw new ClientException("知识库名称不能为空");
+        }
+        if (!StringUtils.hasText(requestParam.getCollectionName())) {
+            throw new ClientException("Collection 名称不能为空");
+        }
+        // Collection 会被同时用作对象存储 Bucket 名称，需满足 S3 bucket 规则。
+        String normalized = requestParam.getCollectionName().trim().toLowerCase();
+        if (!normalized.equals(requestParam.getCollectionName().trim())) {
+            throw new ClientException("Collection 名称需全小写");
+        }
+        if (normalized.contains("_")) {
+            throw new ClientException("Collection 名称不能包含下划线 _");
+        }
+        if (!normalized.matches("^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$")) {
+            throw new ClientException("Collection 名称仅允许小写字母、数字、短横线，长度 3-63 且不能以短横线开头或结尾");
+        }
+    }
+
+    private int resolveEmbeddingDimension(String embeddingModelId) {
+        int dim = embeddingService.dimension(embeddingModelId);
+        if (dim <= 0) {
+            throw new ClientException("未找到可用的 Embedding 维度，请检查模型配置: " + embeddingModelId);
+        }
+        return dim;
     }
 
     @Override
