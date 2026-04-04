@@ -1,0 +1,18 @@
+# Genshin Material: 无光丝线
+
+## Basic
+- Material ID: 113054
+- CN Name: 无光丝线
+- EN Name: Lightless Silk String
+- Material Type: MATERIAL_AVATAR_MATERIAL
+- Item Type: ITEM_MATERIAL
+
+## Description
+与吞星之鲸战斗时，不知不觉缠绕在武器上的细丝。
+在古代的枫丹，曾有人认为主宰万物现象的「法图纳」是由无比细微的「纤维」编制而成，就如同组成竖琴的弦丝。与宏伟的乐声共振的丝线将会带来普世的幸福，正如不谐音会破坏宇宙的肌理。
+
+## Effect
+(none)
+
+## Source
+AnimeGameData: TextMapCHS + ExcelBinOutput

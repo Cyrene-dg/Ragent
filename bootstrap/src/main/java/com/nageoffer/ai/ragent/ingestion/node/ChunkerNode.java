@@ -33,7 +33,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -64,7 +66,7 @@ public class ChunkerNode implements IngestionNode {
             return NodeResult.fail(new ClientException("未找到分块策略: " + settings.getStrategy()));
         }
 
-        ChunkingOptions chunkConfig = convertToChunkConfig(settings);
+        ChunkingOptions chunkConfig = convertToChunkConfig(context, settings);
         List<VectorChunk> results = chunker.chunk(text, chunkConfig);
         List<VectorChunk> chunks = convertToVectorChunks(results);
 
@@ -72,11 +74,19 @@ public class ChunkerNode implements IngestionNode {
         return NodeResult.ok("已分块 " + chunks.size() + " 段");
     }
 
-    private ChunkingOptions convertToChunkConfig(ChunkerSettings settings) {
+    private ChunkingOptions convertToChunkConfig(IngestionContext context, ChunkerSettings settings) {
+        Map<String, Object> metadata = new HashMap<>();
+        if (context.getMetadata() != null) {
+            Object embeddingModel = context.getMetadata().get("embeddingModel");
+            if (embeddingModel instanceof String model && StringUtils.hasText(model)) {
+                metadata.put("embeddingModel", model.trim());
+            }
+        }
         return ChunkingOptions.builder()
                 .chunkSize(settings.getChunkSize())
                 .overlapSize(settings.getOverlapSize())
                 .separator(settings.getSeparator())
+                .metadata(metadata)
                 .build();
     }
 

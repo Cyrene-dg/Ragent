@@ -1,0 +1,64 @@
+{
+  "name": "原神中文知识入库管道",
+  "description": "面向原神中文Markdown文档的数据清洗、切分与向量入库",
+  "nodes": [
+    {
+      "nodeId": "fetch_source",
+      "nodeType": "fetcher",
+      "settings": {},
+      "condition": null,
+      "nextNodeId": "parse_document"
+    },
+    {
+      "nodeId": "parse_document",
+      "nodeType": "parser",
+      "settings": {
+        "rules": [
+          {
+            "mimeType": "MARKDOWN",
+            "options": {}
+          },
+          {
+            "mimeType": "TEXT",
+            "options": {}
+          },
+          {
+            "mimeType": "ALL",
+            "options": {}
+          }
+        ]
+      },
+      "condition": null,
+      "nextNodeId": "chunk_document"
+    },
+    {
+      "nodeId": "chunk_document",
+      "nodeType": "chunker",
+      "settings": {
+        "strategy": "structure_aware",
+        "chunkSize": 900,
+        "overlapSize": 120,
+        "separator": "\n\n"
+      },
+      "condition": null,
+      "nextNodeId": "index_document"
+    },
+    {
+      "nodeId": "index_document",
+      "nodeType": "indexer",
+      "settings": {
+        "metadataFields": [
+          "domain",
+          "category",
+          "entity_type",
+          "entity_id",
+          "source",
+          "lang",
+          "version"
+        ]
+      },
+      "condition": null,
+      "nextNodeId": null
+    }
+  ]
+}

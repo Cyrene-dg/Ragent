@@ -461,11 +461,16 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
             }
 
             // 构建IngestionContext，传递CollectionName
+            Map<String, Object> metadata = new HashMap<>();
+            if (StringUtils.hasText(kbDO.getEmbeddingModel())) {
+                metadata.put("embeddingModel", kbDO.getEmbeddingModel().trim());
+            }
             IngestionContext context = IngestionContext.builder()
                     .taskId(docId)
                     .pipelineId(String.valueOf(pipelineId))
                     .rawBytes(fileBytes)
                     .mimeType(documentDO.getFileType())
+                    .metadata(metadata)
                     .vectorSpaceId(VectorSpaceId.builder()
                             .logicalName(kbDO.getCollectionName())
                             .build())

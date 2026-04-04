@@ -1,0 +1,18 @@
+# Genshin Material: 阴燃之珠
+
+## Basic
+- Material ID: 113024
+- CN Name: 阴燃之珠
+- EN Name: Smoldering Pearl
+- Material Type: MATERIAL_AVATAR_MATERIAL
+- Item Type: ITEM_MATERIAL
+
+## Description
+无相之火坍缩成的结晶，不断散发着热量。
+炽热的火焰终有一天会冷却，而熄灭的柴薪也会随着意志而再度熊熊燃烧。无相之火不断的冷却与复燃、消散与凝聚也是这个世界意志的一部分吧，就如同宇宙万物的生生不息。直到漆黑的命运终有一日降临，将森罗万象归于空无为止。
+
+## Effect
+(none)
+
+## Source
+AnimeGameData: TextMapCHS + ExcelBinOutput

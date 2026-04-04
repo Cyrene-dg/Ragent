@@ -1,0 +1,9 @@
+# Genshin Chapter: 森林书 第三章（无引用） 失梦的苗圃
+
+## Basic
+- Chapter ID: 10081
+- Chapter No: 森林书 第三章（无引用）
+- Chapter Name: 失梦的苗圃
+
+## Source
+AnimeGameData: TextMapCHS + ExcelBinOutput

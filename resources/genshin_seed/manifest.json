@@ -1,0 +1,16 @@
+{
+  "generatedAt": "2026-03-30T07:00:28.630638+00:00",
+  "docsRoot": "G:\\Ragent2026\\ragent\\resources\\genshin_seed\\docs",
+  "totalDocs": 3615,
+  "categoryDocCount": {
+    "achievements": 900,
+    "artifacts": 62,
+    "chapters": 386,
+    "characters": 121,
+    "main_quests": 900,
+    "materials": 1000,
+    "weapons": 246
+  },
+  "intentNodeCount": 1204,
+  "queryMappingCount": 2518
+}

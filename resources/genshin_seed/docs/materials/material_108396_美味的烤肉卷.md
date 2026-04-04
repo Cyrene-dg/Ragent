@@ -1,0 +1,17 @@
+# Genshin Material: 美味的烤肉卷
+
+## Basic
+- Material ID: 108396
+- CN Name: 美味的烤肉卷
+- EN Name: Delicious Shawarma Wrap
+- Material Type: MATERIAL_FOOD
+- Item Type: ITEM_MATERIAL
+
+## Description
+以烤肉为馅的卷饼。外焦里嫩的烤肉被香辛料注入了灵魂，水灵的蔬菜带来了清爽的口感，薄而不硬的饼皮包裹着美味，一口下去令人直叹满足，就连不小心溢出的肉汁都舍不得放过。
+
+## Effect
+队伍中所有角色攻击力提高95点，持续300秒。多人游戏时，仅对自己的角色生效。
+
+## Source
+AnimeGameData: TextMapCHS + ExcelBinOutput

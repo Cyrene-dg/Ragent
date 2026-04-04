@@ -246,7 +246,34 @@ public class IntentTreeFactory {
         sales.setChildren(List.of(dingTaskSales));
         roots.add(sales);
 
-        // ========== 4. 系统交互 / 助手说明 ==========
+        // ========== 4. MCP 工单查询 ==========
+        IntentNode ticket = IntentNode.builder()
+                .id("ticket")
+                .name("工单系统")
+                .level(DOMAIN)
+                .kind(IntentKind.MCP)
+                .build();
+
+        IntentNode ticketQuery = IntentNode.builder()
+                .id("ticket-data")
+                .name("工单状态查询")
+                .level(CATEGORY)
+                .parentId(ticket.getId())
+                .mcpToolId("ticket_query")
+                .kind(IntentKind.MCP)
+                .promptTemplate(MCP_SALES_DATA_PROMPT_TEMPLATE)
+                .description("查询禅道工单状态分布、负责人负载、优先级与明细列表")
+                .examples(List.of(
+                        "帮我看一下工单状态分布",
+                        "列出处理中的高优先级工单",
+                        "最近的MCP相关工单有哪些"
+                ))
+                .build();
+
+        ticket.setChildren(List.of(ticketQuery));
+        roots.add(ticket);
+
+        // ========== 5. 系统交互 / 助手说明 ==========
         IntentNode sys = IntentNode.builder()
                 .id("sys")
                 .name("系统交互")

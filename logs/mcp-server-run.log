@@ -1,0 +1,62 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------< com.nageoffer.ai:mcp-server >---------------------
+[INFO] Building mcp-server 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.5.7:run (default-cli) > test-compile @ mcp-server >>>
+[INFO] 
+[INFO] --- dependency:3.7.0:properties (default) @ mcp-server ---
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ mcp-server ---
+[WARNING] Using platform encoding (GBK actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ mcp-server ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 16 source files with javac [debug parameters target 17] to target\classes
+[WARNING] /G:/Ragent2026/ragent/mcp-server/src/main/java/com/nageoffer/ai/ragent/mcp/executor/TicketMCPExecutor.java:[80,17] org.springframework.boot.web.client.RestTemplateBuilder 中的 setConnectTimeout(java.time.Duration) 已过时, 且标记为待删除
+[WARNING] /G:/Ragent2026/ragent/mcp-server/src/main/java/com/nageoffer/ai/ragent/mcp/executor/TicketMCPExecutor.java:[81,17] org.springframework.boot.web.client.RestTemplateBuilder 中的 setReadTimeout(java.time.Duration) 已过时, 且标记为待删除
+[INFO] 
+[INFO] --- spotless:2.22.1:apply (default) @ mcp-server ---
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ mcp-server ---
+[WARNING] Using platform encoding (GBK actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] skip non existing resourceDirectory G:\Ragent2026\ragent\mcp-server\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ mcp-server ---
+[INFO] No sources to compile
+[INFO] 
+[INFO] <<< spring-boot:3.5.7:run (default-cli) < test-compile @ mcp-server <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:3.5.7:run (default-cli) @ mcp-server ---
+[INFO] Attaching agents: []
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.7)
+
+2026-04-03T02:42:43.585+08:00  INFO 18680 --- [ragent-mcp-server] [           main] c.n.ai.ragent.mcp.MCPServerApplication   : Starting MCPServerApplication using Java 17.0.18 with PID 18680 (G:\Ragent2026\ragent\mcp-server\target\classes started by Lenovo in G:\Ragent2026\ragent\mcp-server)
+2026-04-03T02:42:43.587+08:00  INFO 18680 --- [ragent-mcp-server] [           main] c.n.ai.ragent.mcp.MCPServerApplication   : No active profile set, falling back to 1 default profile: "default"
+2026-04-03T02:42:44.156+08:00  INFO 18680 --- [ragent-mcp-server] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 9099 (http)
+2026-04-03T02:42:44.166+08:00  INFO 18680 --- [ragent-mcp-server] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-04-03T02:42:44.167+08:00  INFO 18680 --- [ragent-mcp-server] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.48]
+2026-04-03T02:42:44.209+08:00  INFO 18680 --- [ragent-mcp-server] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-04-03T02:42:44.210+08:00  INFO 18680 --- [ragent-mcp-server] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 588 ms
+2026-04-03T02:42:44.387+08:00  INFO 18680 --- [ragent-mcp-server] [           main] c.n.a.r.mcp.core.DefaultMCPToolRegistry  : MCP 工具注册成功, toolId: sales_query
+2026-04-03T02:42:44.388+08:00  INFO 18680 --- [ragent-mcp-server] [           main] c.n.a.r.mcp.core.DefaultMCPToolRegistry  : MCP 工具注册成功, toolId: ticket_query
+2026-04-03T02:42:44.388+08:00  INFO 18680 --- [ragent-mcp-server] [           main] c.n.a.r.mcp.core.DefaultMCPToolRegistry  : MCP 工具注册成功, toolId: weather_query
+2026-04-03T02:42:44.388+08:00  INFO 18680 --- [ragent-mcp-server] [           main] c.n.a.r.mcp.core.DefaultMCPToolRegistry  : MCP 工具自动注册完成, 共注册 3 个工具
+2026-04-03T02:42:44.535+08:00  INFO 18680 --- [ragent-mcp-server] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 9099 (http) with context path '/'
+2026-04-03T02:42:44.540+08:00  INFO 18680 --- [ragent-mcp-server] [           main] c.n.ai.ragent.mcp.MCPServerApplication   : Started MCPServerApplication in 1.274 seconds (process running for 1.482)
+2026-04-03T02:42:49.083+08:00  INFO 18680 --- [ragent-mcp-server] [nio-9099-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-03T02:42:49.083+08:00  INFO 18680 --- [ragent-mcp-server] [nio-9099-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-04-03T02:42:49.084+08:00  INFO 18680 --- [ragent-mcp-server] [nio-9099-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+^C

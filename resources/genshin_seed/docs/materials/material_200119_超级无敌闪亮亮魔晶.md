@@ -1,0 +1,19 @@
+# Genshin Material: 「超级无敌闪亮亮魔晶」
+
+## Basic
+- Material ID: 200119
+- CN Name: 「超级无敌闪亮亮魔晶」
+- EN Name: Super-Duper Invincible Shining Sparkly Magic Crystal
+- Material Type: MATERIAL_AVATAR_MATERIAL
+- Item Type: ITEM_MATERIAL
+
+## Description
+「究极霸王超级魔剑」专用的精炼道具。
+能够将许多心愿（以及帅气的硬纸板）牢牢地拼合在一起，从而诞生出究极无敌的神奇力量。
+虽说造型差不多（或者说完全一样）的小道具在达莫维百货也买得到，但两者之间其实说不定有着本质上的区别，所以千万不要搞混。
+
+## Effect
+(none)
+
+## Source
+AnimeGameData: TextMapCHS + ExcelBinOutput

@@ -1,0 +1,18 @@
+# Genshin Material: 过熟的火榴果
+
+## Basic
+- Material ID: 113065
+- CN Name: 过熟的火榴果
+- EN Name: Overripe Flamegranate
+- Material Type: MATERIAL_AVATAR_MATERIAL
+- Item Type: ITEM_MATERIAL
+
+## Description
+击败贪食匿叶龙山王后，获得的奇特火榴果。
+一般来说，成熟的火榴果如果再继续生长，就会跌入泥中腐烂。但是从山王的鬃毛之中落下的果子，或由于其奇特体温保护着的缘故，呈现出非常难得的「过熟」状态。这种状态下的火榴果稳定，富含燃素，果色厚重，别具一番风味。
+
+## Effect
+(none)
+
+## Source
+AnimeGameData: TextMapCHS + ExcelBinOutput

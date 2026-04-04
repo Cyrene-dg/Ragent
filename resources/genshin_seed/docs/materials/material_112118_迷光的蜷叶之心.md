@@ -1,0 +1,19 @@
+# Genshin Material: 迷光的蜷叶之心
+
+## Basic
+- Material ID: 112118
+- CN Name: 迷光的蜷叶之心
+- EN Name: Illusory Leafcoil
+- Material Type: MATERIAL_AVATAR_MATERIAL
+- Item Type: ITEM_MATERIAL
+
+## Description
+名为深邃拟覆叶的魔物在被击败后所残余，由蜷缩在一起的叶片构成的核心。
+即使已如生机尽失般黯淡下去，但是仍能感受到其中隐约鼓动的不祥之力。
+时常有人感到困惑，当此种魔物被消灭时，它从大地之中汲取的那些记忆都去往了何处？或许这枚核心提供了这一问题的答案。
+
+## Effect
+(none)
+
+## Source
+AnimeGameData: TextMapCHS + ExcelBinOutput

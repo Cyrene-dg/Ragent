@@ -41,3 +41,6 @@ node_modules/
 dist/
 .vite/
 .env.local
+
+### Eval artifacts ###
+tests/eval_rag/artifacts/

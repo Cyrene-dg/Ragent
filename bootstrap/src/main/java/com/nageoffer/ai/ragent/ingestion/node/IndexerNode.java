@@ -152,14 +152,14 @@ public class IndexerNode implements IngestionNode {
     }
 
     private int resolveDimension(List<VectorChunk> chunks) {
-        Integer configured = ragDefaultProperties.getDimension();
-        if (configured != null && configured > 0) {
-            return configured;
-        }
         for (VectorChunk chunk : chunks) {
             if (chunk.getEmbedding() != null && chunk.getEmbedding().length > 0) {
                 return chunk.getEmbedding().length;
             }
+        }
+        Integer configured = ragDefaultProperties.getDimension();
+        if (configured != null && configured > 0) {
+            return configured;
         }
         return 0;
     }
@@ -172,7 +172,7 @@ public class IndexerNode implements IngestionNode {
                 throw new ClientException("向量结果缺失，索引: " + i);
             }
             if (expectedDim > 0 && vector.length != expectedDim) {
-                throw new ClientException("向量维度不匹配，索引: " + i);
+                throw new ClientException("向量维度不匹配，索引: " + i + "，期望: " + expectedDim + "，实际: " + vector.length);
             }
             out[i] = vector;
         }

@@ -1,0 +1,19 @@
+# Genshin Material: 「天光」的哲学
+
+## Basic
+- Material ID: 104328
+- CN Name: 「天光」的哲学
+- EN Name: Philosophies of Light
+- Material Type: MATERIAL_AVATAR_MATERIAL
+- Item Type: ITEM_MATERIAL
+
+## Description
+天赋培养素材。
+雷之国土的愿望是天光。
+即使永远生活在地下，人也会不屈地祈求天光。人总是追逐超越，无可止步。静止封闭的永恒亦固然壮丽，但其本质终究是死亡。
+
+## Effect
+(none)
+
+## Source
+AnimeGameData: TextMapCHS + ExcelBinOutput

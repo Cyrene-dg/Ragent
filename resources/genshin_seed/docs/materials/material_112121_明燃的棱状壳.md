@@ -1,0 +1,18 @@
+# Genshin Material: 明燃的棱状壳
+
+## Basic
+- Material ID: 112121
+- CN Name: 明燃的棱状壳
+- EN Name: Blazing Prismshell
+- Material Type: MATERIAL_AVATAR_MATERIAL
+- Item Type: ITEM_MATERIAL
+
+## Description
+击败炉壳山鼬后，从其背上取得的完整的背壳碎块。
+据说在一个种群之中，地位越高的炉壳山鼬，其背后蕴藏的燃素会更多，而地位越低越弱的个体，背后蕴藏的燃素越少。形成这个现象的原因也许很好解释：地位越高的炉壳山鼬，需要运用到背后积蓄的燃素的机会或许永远没有地位低的个体那样多吧。
+
+## Effect
+(none)
+
+## Source
+AnimeGameData: TextMapCHS + ExcelBinOutput

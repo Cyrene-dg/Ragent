@@ -1,0 +1,18 @@
+# Genshin Material: 蕈王钩喙
+
+## Basic
+- Material ID: 113036
+- CN Name: 蕈王钩喙
+- EN Name: Majestic Hooked Beak
+- Material Type: MATERIAL_AVATAR_MATERIAL
+- Item Type: ITEM_MATERIAL
+
+## Description
+击败翠翎恐蕈后，获得的角质结构。
+学者至今都觉得柔软的蕈兽演化出坚如磐石的钩喙是一个奇迹。在演化的终点线上，堪称华美的众蕈之王悠然踱步，时而长鸣，在向雨林中的万物昭告：哪怕再弱小再胆怯的生灵，也有可能成为未来的山林主人。
+
+## Effect
+(none)
+
+## Source
+AnimeGameData: TextMapCHS + ExcelBinOutput

@@ -1,0 +1,24 @@
+[D] 2026-04-02 23:49:24 ..\..\zenpanel\zbox\controller.cpp L:(206) F:[initInitConfig] "G:/chandao2026/ZenTao/etc/zbox/config.yml"
+[D] 2026-04-02 23:49:24 ..\..\zenpanel\zbox\controller.cpp L:(207) F:[initInitConfig] "G:/chandao2026/ZenTao/zbox/config.yml"
+[D] 2026-04-02 23:49:24 ..\..\zenpanel\zbox\controller.cpp L:(214) F:[initUserConfig] "G:/chandao2026/ZenTao/tmp/zbox.yml"
+[D] 2026-04-02 23:49:24 ..\..\zenpanel\zbox\controller.cpp L:(222) F:[initLangConfig] "zh-cn"
+[D] 2026-04-02 23:49:24 ..\..\zenpanel\zbox\controller.cpp L:(223) F:[initLangConfig] ""
+[D] 2026-04-02 23:49:24 ..\..\zenpanel\zbox\controller.cpp L:(226) F:[initLangConfig] Finally set the lang is:
+[D] 2026-04-02 23:49:24 ..\..\zenpanel\zbox\controller.cpp L:(227) F:[initLangConfig] "zh-cn"
+[D] 2026-04-02 23:49:24 ..\..\zenpanel\zbox\controller.cpp L:(532) F:[loadLang] "G:/chandao2026/ZenTao/etc/zbox/lang/zh-cn.yml"
+[D] 2026-04-02 23:49:24 ..\..\zenpanel\zbox\controller.cpp L:(533) F:[loadLang] "G:/chandao2026/ZenTao/zbox/lang/zh-cn.yml"
+[D] 2026-04-02 23:49:24 ..\..\zenpanel\zbox\controller.cpp L:(536) F:[loadLang] "zh-cn"
+[W] 2026-04-02 23:49:26 QWidget::setMinimumSize: (/QTextEdit) Negative sizes (-70,499) are not possible
+[W] 2026-04-02 23:49:26 QWidget::setMaximumSize: (/QTextEdit) Negative sizes (-70,499) are not possible
+[D] 2026-04-02 23:53:11 ..\..\zenpanel\zbox\controller.cpp L:(206) F:[initInitConfig] "G:/chandao2026/ZenTao/etc/zbox/config.yml"
+[D] 2026-04-02 23:53:11 ..\..\zenpanel\zbox\controller.cpp L:(207) F:[initInitConfig] "G:/chandao2026/ZenTao/zbox/config.yml"
+[D] 2026-04-02 23:53:11 ..\..\zenpanel\zbox\controller.cpp L:(214) F:[initUserConfig] "G:/chandao2026/ZenTao/tmp/zbox.yml"
+[D] 2026-04-02 23:53:11 ..\..\zenpanel\zbox\controller.cpp L:(222) F:[initLangConfig] "zh-cn"
+[D] 2026-04-02 23:53:11 ..\..\zenpanel\zbox\controller.cpp L:(223) F:[initLangConfig] ""
+[D] 2026-04-02 23:53:11 ..\..\zenpanel\zbox\controller.cpp L:(226) F:[initLangConfig] Finally set the lang is:
+[D] 2026-04-02 23:53:11 ..\..\zenpanel\zbox\controller.cpp L:(227) F:[initLangConfig] "zh-cn"
+[D] 2026-04-02 23:53:11 ..\..\zenpanel\zbox\controller.cpp L:(532) F:[loadLang] "G:/chandao2026/ZenTao/etc/zbox/lang/zh-cn.yml"
+[D] 2026-04-02 23:53:11 ..\..\zenpanel\zbox\controller.cpp L:(533) F:[loadLang] "G:/chandao2026/ZenTao/zbox/lang/zh-cn.yml"
+[D] 2026-04-02 23:53:11 ..\..\zenpanel\zbox\controller.cpp L:(536) F:[loadLang] "zh-cn"
+[W] 2026-04-02 23:53:13 QWidget::setMinimumSize: (/QTextEdit) Negative sizes (-70,499) are not possible
+[W] 2026-04-02 23:53:13 QWidget::setMaximumSize: (/QTextEdit) Negative sizes (-70,499) are not possible

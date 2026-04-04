@@ -50,9 +50,9 @@ public class RAGChatController {
     //返回的是流式返回类型，不是普通json
     @GetMapping(value = "/rag/v3/chat", produces = "text/event-stream;charset=UTF-8")
     //参数，问题，对话号，是否开启深度思考
-    public SseEmitter chat(@RequestParam String question,
-                           @RequestParam(required = false) String conversationId,
-                           @RequestParam(required = false, defaultValue = "false") Boolean deepThinking) {
+    public SseEmitter chat(@RequestParam("question") String question,
+                           @RequestParam(value = "conversationId", required = false) String conversationId,
+                           @RequestParam(value = "deepThinking", required = false, defaultValue = "false") Boolean deepThinking) {
         //不设置超时时间，即无限等待
         SseEmitter emitter = new SseEmitter(0L);
         //将参数传入service
@@ -66,7 +66,7 @@ public class RAGChatController {
     //幂等注解
     @IdempotentSubmit
     @PostMapping(value = "/rag/v3/stop")
-    public Result<Void> stop(@RequestParam String taskId) {
+    public Result<Void> stop(@RequestParam("taskId") String taskId) {
         ragChatService.stopTask(taskId);
         return Results.success();
     }

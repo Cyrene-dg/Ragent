@@ -1,0 +1,19 @@
+# Genshin Material: 兽境王器
+
+## Basic
+- Material ID: 113030
+- CN Name: 兽境王器
+- EN Name: Riftborn Regalia
+- Material Type: MATERIAL_AVATAR_MATERIAL
+- Item Type: ITEM_MATERIAL
+
+## Description
+战胜王兽后，得到的折断犄角。在它遭到驱逐后，不应残留在此世才对。
+即使在兽境群狼中贵为王兽，在魔兽的系谱中也不及其兄长们的万分之一吧。
+「黄金」将无数兽境的群狼如同将弃置的画纸一般压缩后而意外产生的畸形魔兽，而寄寓在其犄角中的是足以号令黑色的狼群为它溶解空间的权威。
+
+## Effect
+(none)
+
+## Source
+AnimeGameData: TextMapCHS + ExcelBinOutput

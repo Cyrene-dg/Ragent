@@ -4,3 +4,11 @@ server:
 spring:
   application:
     name: ragent-mcp-server
+
+zentao:
+  api-base-url: ${ZENTAO_API_BASE_URL:http://127.0.0.1/zentao/api.php/v1}
+  account: ${ZENTAO_ACCOUNT:admin}
+  password: ${ZENTAO_PASSWORD:Ghr040707}
+  product-id: ${ZENTAO_PRODUCT_ID:1}
+  execution-id: ${ZENTAO_EXECUTION_ID:3}
+  page-limit: ${ZENTAO_PAGE_LIMIT:200}
