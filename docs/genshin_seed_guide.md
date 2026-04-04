@@ -15,8 +15,14 @@ Already validated in this workspace.
 Run:
 
 ```powershell
-python scripts/genshin/build_genshin_seed.py --clean --max-main-quests 900 --max-achievements 900 --max-materials 1000
+python scripts/genshin/build_genshin_seed.py --clean --max-main-quests 3943 --max-main-quest-intents 700 --max-achievements 900 --max-materials 1000
 ```
+
+New in this version:
+
+- Main quest docs include sub-quest steps from `QuestExcelConfigData`.
+- Optional weapon-owner enrichment from `resources/genshin_seed/extensions/weapon_owner_links.json`.
+- Optional lore extension docs from `resources/genshin_seed/extensions/lore_entries.json`.
 
 Output directory:
 

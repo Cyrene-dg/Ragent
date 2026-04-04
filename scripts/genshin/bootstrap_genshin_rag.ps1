@@ -1,4 +1,4 @@
-Param(
+﻿Param(
     [string]$ApiBaseUrl = "http://localhost:9090/api/ragent",
     [string]$Username = "admin",
     [string]$Password = "admin",
@@ -98,10 +98,10 @@ function Get-AllKnowledgeDocNames {
 function Normalize-SeedText {
     Param([string]$Text)
     if ($null -eq $Text) { return $null }
-    # 后端当前会在包含中点字符（U+00B7）时返回 B000001，这里统一做兼容规避。
-    return $Text.Replace("·", "")
+    # Backend compatibility: strip a few punctuation chars that may cause validation errors.
+    $normalized = $Text.Replace("·", "").Replace("•", "")
+    return $normalized
 }
-
 function Flatten-IntentCodes {
     Param([object[]]$Trees)
     $set = New-Object 'System.Collections.Generic.HashSet[string]'
