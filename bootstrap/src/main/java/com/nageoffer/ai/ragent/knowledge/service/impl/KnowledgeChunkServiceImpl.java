@@ -44,6 +44,7 @@ import com.nageoffer.ai.ragent.framework.exception.ServiceException;
 import com.nageoffer.ai.ragent.infra.embedding.EmbeddingService;
 import com.nageoffer.ai.ragent.infra.token.TokenCounterService;
 import com.nageoffer.ai.ragent.rag.core.vector.VectorStoreService;
+import com.nageoffer.ai.ragent.rag.es.KeywordEsGateway;
 import com.nageoffer.ai.ragent.knowledge.service.KnowledgeChunkService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -72,6 +73,7 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
     private final EmbeddingService embeddingService;
     private final TokenCounterService tokenCounterService;
     private final VectorStoreService vectorStoreService;
+    private final KeywordEsGateway keywordEsGateway;
 
     @Override
     public Boolean existsByDocId(String docId) {
@@ -146,6 +148,7 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
 
         // 同步写入 Milvus
         syncChunkToMilvus(String.valueOf(documentDO.getKbId()), docId, chunkDO, embeddingModel);
+        syncChunksToKeywordEs(documentDO, List.of(chunkDO));
 
         return BeanUtil.toBean(chunkDO, KnowledgeChunkVO.class);
     }
@@ -230,6 +233,7 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
                 vectorStoreService.indexDocumentChunks(kbIdStr, docId, vectorChunks);
             }
         }
+        syncChunksToKeywordEs(documentDO, chunkDOList);
     }
 
     @Override
@@ -272,6 +276,7 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
                         .embedding(toArray(embedContent(newContent, embeddingModel)))
                         .build()
         );
+        syncChunksToKeywordEs(documentDO, List.of(chunkDO));
     }
 
     @Override
@@ -290,6 +295,7 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
         log.info("删除 Chunk 成功, kbId={}, docId={}, chunkId={}", kbId, docId, chunkId);
 
         deleteChunkFromMilvus(kbId, chunkId);
+        keywordEsGateway.deleteChunk(chunkId);
     }
 
     @Override
@@ -318,8 +324,10 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
 
         if (enabled) {
             syncChunkToMilvus(kbId, docId, chunkDO, resolveEmbeddingModel(documentDO.getKbId()));
+            syncChunksToKeywordEs(documentDO, List.of(chunkDO));
         } else {
             deleteChunkFromMilvus(kbId, chunkId);
+            keywordEsGateway.deleteChunk(chunkId);
         }
     }
 
@@ -357,6 +365,11 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
 
         String kbId = String.valueOf(documentDO.getKbId());
         log.info("根据文档ID更新所有Chunk启用状态, kbId={}, docId={}, enabled={}", kbId, docId, enabled);
+        if (enabled) {
+            replaceDocKeywordIndex(documentDO, docId);
+        } else {
+            keywordEsGateway.deleteChunksByDocId(docId);
+        }
     }
 
     @Override
@@ -381,6 +394,7 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
         if (docId == null) {
             return;
         }
+        keywordEsGateway.deleteChunksByDocId(docId);
         chunkMapper.delete(new LambdaQueryWrapper<KnowledgeChunkDO>().eq(KnowledgeChunkDO::getDocId, docId));
     }
 
@@ -423,6 +437,7 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
         vectorStoreService.indexDocumentChunks(kbId, docId, chunks);
 
         log.info("重建文档向量成功, kbId={}, docId={}, chunkCount={}", kbId, docId, enabledChunks.size());
+        replaceDocKeywordIndex(documentDO, docId);
     }
 
     // ==================== 私有方法 ====================
@@ -474,7 +489,37 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
             for (Long chunkId : needUpdateIds) {
                 deleteChunkFromMilvus(kbId, String.valueOf(chunkId));
             }
+            replaceDocKeywordIndex(documentDO, docId);
         }
+    }
+
+    private void syncChunksToKeywordEs(KnowledgeDocumentDO documentDO, List<KnowledgeChunkDO> chunks) {
+        if (documentDO == null || CollUtil.isEmpty(chunks)) {
+            return;
+        }
+        keywordEsGateway.upsertChunks(
+                documentDO.getKbId(),
+                documentDO.getId(),
+                documentDO.getDocName(),
+                chunks
+        );
+    }
+
+    private void replaceDocKeywordIndex(KnowledgeDocumentDO documentDO, String docId) {
+        if (documentDO == null || !StringUtils.hasText(docId)) {
+            return;
+        }
+        keywordEsGateway.deleteChunksByDocId(docId);
+        List<KnowledgeChunkDO> enabledChunks = chunkMapper.selectList(
+                Wrappers.lambdaQuery(KnowledgeChunkDO.class)
+                        .eq(KnowledgeChunkDO::getDocId, docId)
+                        .eq(KnowledgeChunkDO::getEnabled, 1)
+                        .orderByAsc(KnowledgeChunkDO::getChunkIndex)
+        );
+        if (CollUtil.isEmpty(enabledChunks)) {
+            return;
+        }
+        syncChunksToKeywordEs(documentDO, enabledChunks);
     }
 
     /**

@@ -82,6 +82,27 @@ rag:
       intent-directed:
         min-intent-score: 0.4
         top-k-multiplier: 2
+      keyword-es:
+        enabled: true
+        base-url: http://localhost:9200
+        index-name: ragent_chunk_v1
+        top-k-multiplier: 2
+        min-intent-score: 0.4
+        fallback-when-no-intent: true
+        title-boost: 3.0
+        keywords-boost: 2.0
+        content-boost: 1.0
+        phrase-boost: 1.2
+        min-score: 0.0
+        connect-timeout-ms: 1000
+        write-timeout-ms: 3000
+        read-timeout-ms: 3000
+        call-timeout-ms: 4000
+        max-retries: 1
+        retry-backoff-ms: 120
+        refresh-on-write: true
+        backfill-on-startup: false
+        backfill-batch-size: 500
 
   trace:
     enabled: true

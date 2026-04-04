@@ -55,6 +55,7 @@ import com.nageoffer.ai.ragent.core.parser.ParserType;
 import com.nageoffer.ai.ragent.rag.core.vector.VectorStoreService;
 import com.nageoffer.ai.ragent.rag.core.vector.VectorSpaceId;
 import com.nageoffer.ai.ragent.rag.service.FileStorageService;
+import com.nageoffer.ai.ragent.rag.es.KeywordEsGateway;
 import com.nageoffer.ai.ragent.knowledge.service.KnowledgeChunkService;
 import com.nageoffer.ai.ragent.knowledge.service.KnowledgeDocumentService;
 import com.nageoffer.ai.ragent.knowledge.service.KnowledgeDocumentScheduleService;
@@ -103,6 +104,7 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
     private final ChunkingStrategyFactory chunkingStrategyFactory;
     private final FileStorageService fileStorageService;
     private final VectorStoreService vectorStoreService;
+    private final KeywordEsGateway keywordEsGateway;
     private final KnowledgeChunkService knowledgeChunkService;
     private final EmbeddingService embeddingService;
     private final HttpClientHelper httpClientHelper;
@@ -531,6 +533,7 @@ public class KnowledgeDocumentServiceImpl implements KnowledgeDocumentService {
         docMapper.deleteById(documentDO);
 
         vectorStoreService.deleteDocumentVectors(String.valueOf(documentDO.getKbId()), docId);
+        keywordEsGateway.deleteChunksByDocId(docId);
     }
 
     @Override
