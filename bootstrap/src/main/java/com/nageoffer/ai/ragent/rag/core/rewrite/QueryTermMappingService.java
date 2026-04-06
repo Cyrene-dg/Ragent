@@ -112,4 +112,11 @@ public class QueryTermMappingService {
         }
         return result;
     }
+
+    /**
+     * 返回当前启用映射规则快照（只读）
+     */
+    public List<QueryTermMappingDO> listEnabledMappingsSnapshot() {
+        return List.copyOf(cachedMappings);
+    }
 }

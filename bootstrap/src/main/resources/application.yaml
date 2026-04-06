@@ -46,6 +46,28 @@ rag:
     max-history-messages: 4
     max-history-chars: 500
 
+  intent:
+    prefilter:
+      enabled: true
+      candidate-limit: 80
+      min-candidate-limit: 50
+      max-candidate-limit: 100
+      rule-enabled: true
+      keyword-enabled: true
+      vector-enabled: true
+      vector-async-warmup: true
+      rule-top-k: 80
+      keyword-top-k: 80
+      vector-top-k: 80
+      rule-quota: 20
+      keyword-quota: 20
+      vector-quota: 20
+      rule-weight: 1.0
+      keyword-weight: 0.9
+      vector-weight: 1.1
+      max-alias-terms-per-intent: 12
+      min-rule-trigger-length: 2
+
   rate-limit:
     global:
       enabled: true

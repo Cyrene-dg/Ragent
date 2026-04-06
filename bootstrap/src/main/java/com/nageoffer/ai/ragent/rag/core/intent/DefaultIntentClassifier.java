@@ -61,6 +61,7 @@ public class DefaultIntentClassifier implements IntentClassifier, IntentNodeRegi
     private final IntentNodeMapper intentNodeMapper;
     private final PromptTemplateLoader promptTemplateLoader;
     private final IntentTreeCacheManager intentTreeCacheManager;
+    private final IntentHybridRecallService intentHybridRecallService;
 
     /**
      * 从Redis加载意图树并构建内存结构
@@ -139,7 +140,10 @@ public class DefaultIntentClassifier implements IntentClassifier, IntentNodeRegi
         // 每次都从Redis读取最新数据
         IntentTreeData data = loadIntentTreeData();
 
-        String systemPrompt = buildPrompt(data.leafNodes);
+        List<IntentNode> candidateLeafNodes = intentHybridRecallService.shortlist(question, data.leafNodes);
+        log.info("意图精判候选规模 - question='{}', totalLeaf={}, shortlisted={}",
+                question, data.leafNodes.size(), candidateLeafNodes.size());
+        String systemPrompt = buildPrompt(candidateLeafNodes);
         ChatRequest request = ChatRequest.builder()
                 .messages(List.of(
                         ChatMessage.system(systemPrompt),

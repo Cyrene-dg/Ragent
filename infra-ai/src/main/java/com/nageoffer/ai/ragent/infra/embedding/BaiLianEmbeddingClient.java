@@ -77,8 +77,8 @@ public class BaiLianEmbeddingClient implements EmbeddingClient {
             return Collections.emptyList();
         }
 
-        // 百炼兼容接口支持批量 input，这里控制单次批量上限，避免单请求过大。
-        final int maxBatch = 32;
+        // 百炼 embedding 对 input.contents 存在单次批量上限（实测 <=10），需要显式分批。
+        final int maxBatch = 10;
         List<List<Float>> results = new ArrayList<>(Collections.nCopies(texts.size(), null));
         for (int i = 0, n = texts.size(); i < n; i += maxBatch) {
             int end = Math.min(i + maxBatch, n);
