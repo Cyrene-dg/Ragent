@@ -85,6 +85,7 @@ public class StructureAwareTextChunker extends AbstractEmbeddingChunker {
     }
 
     @Override
+//    、、核心总调度方法
     protected List<VectorChunk> doChunk(String text, ChunkingOptions config) {
         if (StrUtil.isBlank(text)) return List.of();
 
@@ -136,6 +137,7 @@ public class StructureAwareTextChunker extends AbstractEmbeddingChunker {
     }
 
     // ----------- 1) 线性扫描生成块 -----------
+    //先把文章拆成“标题/段落/代码/图片链接”
     private List<Block> segmentToBlocks(String text) {
         List<Block> blocks = new ArrayList<>();
         int n = text.length();
@@ -229,6 +231,7 @@ public class StructureAwareTextChunker extends AbstractEmbeddingChunker {
     }
 
     // 合并“块尾部的若干空行”到块内部，避免单独产生空白块（保持原文不变，只是归属到前块）
+    //别让空行自己单独成块
     private List<Block> coalesceTrailingBlanks(List<Block> blocks, String text) {
         if (blocks.isEmpty()) return blocks;
         List<Block> out = new ArrayList<>();
@@ -248,6 +251,7 @@ public class StructureAwareTextChunker extends AbstractEmbeddingChunker {
     }
 
     // ----------- 2) 打包成 chunk（仅在块边界切） -----------
+    //把小块拼成正式 chunk
     private List<int[]> packBlocksToChunks(List<Block> blocks, int textLen, int min, int target, int max) {
         List<int[]> ranges = new ArrayList<>();
         int i = 0;
@@ -296,6 +300,7 @@ public class StructureAwareTextChunker extends AbstractEmbeddingChunker {
     }
 
     // ----------- 3) 物化为 Chunk，必要时追加 overlap（复制原文尾部） -----------
+    //真正生成结果对象
     private List<VectorChunk> materialize(String text, List<int[]> ranges, int overlap) {
         if (ranges.isEmpty()) return List.of();
         List<VectorChunk> out = new ArrayList<>();
@@ -325,11 +330,13 @@ public class StructureAwareTextChunker extends AbstractEmbeddingChunker {
     }
 
     // ----------- 小工具 -----------
+    //找一行到哪结束
     private int indexOfNl(String s, int from) {
         int p = s.indexOf('\n', from);
         return p < 0 ? s.length() : p;
     }
 
+    //只去右边空白
     private String trimRightKeepLeft(String s) {
         int r = s.length();
         while (r > 0 && Character.isWhitespace(s.charAt(r - 1)) && s.charAt(r - 1) != '\n' && s.charAt(r - 1) != '\r') {
@@ -338,6 +345,7 @@ public class StructureAwareTextChunker extends AbstractEmbeddingChunker {
         return s.substring(0, r);
     }
 
+    //判断是不是纯空白
     private boolean isAllBlank(String s, int from, int to) {
         for (int i = from; i < to; i++) {
             char c = s.charAt(i);
@@ -346,6 +354,7 @@ public class StructureAwareTextChunker extends AbstractEmbeddingChunker {
         return true;
     }
 
+    //取尾巴做 overlap
     private String tailByChars(String s, int n) {
         if (n <= 0) return "";
         int len = s.length();
