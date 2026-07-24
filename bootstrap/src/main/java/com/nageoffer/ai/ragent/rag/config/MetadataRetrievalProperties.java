@@ -29,8 +29,11 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "rag.metadata-routing")
 public class MetadataRetrievalProperties {
 
-    /** Enable planning only; search execution is introduced in a later phase. */
+    /** Enable v7 metadata-plan generation. */
     private boolean enabled = true;
+
+    /** Apply the generated plan to Milvus; disabled keeps the legacy retrieval path. */
+    private boolean executionEnabled = true;
 
     /** Declarative leaf-intent to metadata route mapping. */
     private String intentRoutesLocation = "file:resources/genshin_seed_v7/config/intent_routes.json";

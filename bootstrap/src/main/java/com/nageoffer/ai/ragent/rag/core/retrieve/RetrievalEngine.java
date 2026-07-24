@@ -159,7 +159,7 @@ public class RetrievalEngine {
         }
 
         //拿当前子问题和它的 KB 意图，去做知识检索，并得到一个 KB 检索结果对象。
-        KbResult kbResult = retrieveAndRerank(intent, kbIntents, topK);
+        KbResult kbResult = retrieveAndRerank(intent, kbIntents, topK, retrievalPlan);
 
         //如果当前子问题存在 MCP 意图，就去执行对应工具并把结果合并成一段 MCP 上下文；如果没有 MCP 意图，就给空字符串。
         String mcpContext = CollUtil.isNotEmpty(mcpIntents)
@@ -238,10 +238,13 @@ public class RetrievalEngine {
 
 
     //针对一个子问题，先去知识库真正检索一批相关 chunk；然后把这些 chunk 按“意图节点”整理成后面大模型能吃的 KB 上下文文本，并顺手保留结构化分组结果。
-    private KbResult retrieveAndRerank(SubQuestionIntent intent, List<NodeScore> kbIntents, int topK) {
+    private KbResult retrieveAndRerank(SubQuestionIntent intent,
+                                       List<NodeScore> kbIntents,
+                                       int topK,
+                                       RetrievalPlan retrievalPlan) {
         // 使用多通道检索引擎（是否启用全局检索由置信度阈值决定）
         List<SubQuestionIntent> subIntents = List.of(intent);
-        List<RetrievedChunk> chunks = multiChannelRetrievalEngine.retrieveKnowledgeChannels(subIntents, topK);
+        List<RetrievedChunk> chunks = multiChannelRetrievalEngine.retrieveKnowledgeChannels(subIntents, topK, retrievalPlan);
 
         if (CollUtil.isEmpty(chunks)) {
             return KbResult.empty();

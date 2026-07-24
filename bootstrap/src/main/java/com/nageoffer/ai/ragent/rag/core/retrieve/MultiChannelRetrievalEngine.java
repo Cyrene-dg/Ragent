@@ -24,6 +24,7 @@ import com.nageoffer.ai.ragent.rag.core.retrieve.channel.SearchChannel;
 import com.nageoffer.ai.ragent.rag.core.retrieve.channel.SearchChannelResult;
 import com.nageoffer.ai.ragent.rag.core.retrieve.channel.SearchContext;
 import com.nageoffer.ai.ragent.rag.core.retrieve.postprocessor.SearchResultPostProcessor;
+import com.nageoffer.ai.ragent.rag.core.retrieve.plan.RetrievalPlan;
 import com.nageoffer.ai.ragent.rag.dto.SubQuestionIntent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -64,8 +65,15 @@ public class MultiChannelRetrievalEngine {
      */
     @RagTraceNode(name = "multi-channel-retrieval", type = "RETRIEVE_CHANNEL")
     public List<RetrievedChunk> retrieveKnowledgeChannels(List<SubQuestionIntent> subIntents, int topK) {
+        return retrieveKnowledgeChannels(subIntents, topK, null);
+    }
+
+    /** Execute retrieval channels with an optional metadata-scoped plan. */
+    public List<RetrievedChunk> retrieveKnowledgeChannels(List<SubQuestionIntent> subIntents,
+                                                           int topK,
+                                                           RetrievalPlan retrievalPlan) {
         // 构建检索上下文
-        SearchContext context = buildSearchContext(subIntents, topK);
+        SearchContext context = buildSearchContext(subIntents, topK, retrievalPlan);
 
         // 【阶段1：多通道并行检索】
         List<SearchChannelResult> channelResults = executeSearchChannels(context);
@@ -214,7 +222,9 @@ public class MultiChannelRetrievalEngine {
     /**
      * 构建检索上下文
      */
-    private SearchContext buildSearchContext(List<SubQuestionIntent> subIntents, int topK) {
+    private SearchContext buildSearchContext(List<SubQuestionIntent> subIntents,
+                                             int topK,
+                                             RetrievalPlan retrievalPlan) {
         String question = CollUtil.isEmpty(subIntents) ? "" : subIntents.get(0).subQuestion();
 
         return SearchContext.builder()
@@ -222,6 +232,7 @@ public class MultiChannelRetrievalEngine {
                 .rewrittenQuestion(question)
                 .intents(subIntents)
                 .topK(topK)
+                .retrievalPlan(retrievalPlan)
                 .build();
     }
 }

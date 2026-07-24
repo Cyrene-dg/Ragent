@@ -18,6 +18,7 @@
 package com.nageoffer.ai.ragent.rag.core.retrieve.channel;
 
 import com.nageoffer.ai.ragent.rag.dto.SubQuestionIntent;
+import com.nageoffer.ai.ragent.rag.core.retrieve.plan.RetrievalPlan;
 import lombok.Builder;
 import lombok.Data;
 
@@ -53,6 +54,9 @@ public class SearchContext {
      * 意图识别结果
      */
     private List<SubQuestionIntent> intents;
+
+    /** Metadata-scoped retrieval policy for a routed knowledge base, when available. */
+    private RetrievalPlan retrievalPlan;
 
     /**
      * 期望返回的结果数量

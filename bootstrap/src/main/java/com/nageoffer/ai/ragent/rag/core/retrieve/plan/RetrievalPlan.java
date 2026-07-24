@@ -20,8 +20,8 @@ package com.nageoffer.ai.ragent.rag.core.retrieve.plan;
 import java.util.List;
 
 /**
- * Read-only retrieval decision produced before search execution.  This first
- * phase emits the plan for tracing only; no channel consumes it yet.
+ * Read-only retrieval decision produced before search execution.  Channels may
+ * consume it to scope their retrieval without owning routing decisions.
  */
 public record RetrievalPlan(
         String question,

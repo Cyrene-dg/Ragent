@@ -23,6 +23,7 @@ import com.nageoffer.ai.ragent.framework.convention.RetrievedChunk;
 import com.nageoffer.ai.ragent.knowledge.dao.entity.KnowledgeBaseDO;
 import com.nageoffer.ai.ragent.knowledge.dao.mapper.KnowledgeBaseMapper;
 import com.nageoffer.ai.ragent.rag.config.SearchChannelProperties;
+import com.nageoffer.ai.ragent.rag.config.MetadataRetrievalProperties;
 import com.nageoffer.ai.ragent.rag.core.intent.NodeScore;
 import com.nageoffer.ai.ragent.rag.core.retrieve.RetrieverService;
 import com.nageoffer.ai.ragent.rag.core.retrieve.channel.strategy.CollectionParallelRetriever;
@@ -47,14 +48,17 @@ import java.util.concurrent.Executor;
 public class VectorGlobalSearchChannel implements SearchChannel {
 
     private final SearchChannelProperties properties;
+    private final MetadataRetrievalProperties metadataRetrievalProperties;
     private final KnowledgeBaseMapper knowledgeBaseMapper;
     private final CollectionParallelRetriever parallelRetriever;
 
     public VectorGlobalSearchChannel(RetrieverService retrieverService,
                                      SearchChannelProperties properties,
+                                     MetadataRetrievalProperties metadataRetrievalProperties,
                                      KnowledgeBaseMapper knowledgeBaseMapper,
                                      @Qualifier("ragInnerRetrievalThreadPoolExecutor") Executor innerRetrievalExecutor) {
         this.properties = properties;
+        this.metadataRetrievalProperties = metadataRetrievalProperties;
         this.knowledgeBaseMapper = knowledgeBaseMapper;
         this.parallelRetriever = new CollectionParallelRetriever(retrieverService, innerRetrievalExecutor);
     }
@@ -72,6 +76,13 @@ public class VectorGlobalSearchChannel implements SearchChannel {
     @Override
     public boolean isEnabled(SearchContext context) {
         if (!properties.getChannels().getVectorGlobal().isEnabled()) {
+            return false;
+        }
+        if (metadataRetrievalProperties.isEnabled()
+                && metadataRetrievalProperties.isExecutionEnabled()
+                && context.getRetrievalPlan() != null
+                && !context.getRetrievalPlan().isEmpty()) {
+            log.info("Metadata plan is active; skip cross-knowledge-base vector fallback");
             return false;
         }
 

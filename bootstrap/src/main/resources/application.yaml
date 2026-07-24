@@ -128,6 +128,7 @@ rag:
 
   metadata-routing:
     enabled: true
+    execution-enabled: true
     intent-routes-location: file:resources/genshin_seed_v7/config/intent_routes.json
     entity-catalog-location: file:resources/genshin_seed_v7/config/entity_catalog.jsonl
     target-candidate-count: 20
