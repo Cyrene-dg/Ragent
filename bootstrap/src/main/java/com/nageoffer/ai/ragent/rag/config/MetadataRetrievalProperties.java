@@ -44,6 +44,15 @@ public class MetadataRetrievalProperties {
     /** Desired unique candidate count before a later retrieval phase stops relaxing filters. */
     private int targetCandidateCount = 20;
 
-    /** Maximum merged candidate pool that a later retrieval phase sends to rerank. */
+    /** Maximum candidate pool inside one metadata retrieval plan. */
     private int maxCandidatePool = 40;
+
+    /**
+     * Safety ceiling after cross-channel de-duplication and before rerank.
+     * The limiter is dormant while the candidate count is at or below this value.
+     */
+    private int maxRerankCandidates = 80;
+
+    /** Standard RRF rank constant used only when the rerank safety ceiling is exceeded. */
+    private int rrfRankConstant = 60;
 }
