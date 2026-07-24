@@ -126,6 +126,13 @@ rag:
         backfill-on-startup: false
         backfill-batch-size: 500
 
+  metadata-routing:
+    enabled: true
+    intent-routes-location: file:resources/genshin_seed_v7/config/intent_routes.json
+    entity-catalog-location: file:resources/genshin_seed_v7/config/entity_catalog.jsonl
+    target-candidate-count: 20
+    max-candidate-pool: 40
+
   trace:
     enabled: true
     max-error-length: 1000

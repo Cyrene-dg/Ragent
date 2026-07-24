@@ -34,6 +34,8 @@ import com.nageoffer.ai.ragent.rag.core.mcp.MCPTool;
 import com.nageoffer.ai.ragent.rag.core.mcp.MCPToolExecutor;
 import com.nageoffer.ai.ragent.rag.core.mcp.MCPToolRegistry;
 import com.nageoffer.ai.ragent.rag.core.prompt.ContextFormatter;
+import com.nageoffer.ai.ragent.rag.core.retrieve.plan.RetrievalPlan;
+import com.nageoffer.ai.ragent.rag.core.retrieve.plan.RetrievalPlanService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -66,6 +68,7 @@ public class RetrievalEngine {
     private final MCPParameterExtractor mcpParameterExtractor;
     private final MCPToolRegistry mcpToolRegistry;
     private final MultiChannelRetrievalEngine multiChannelRetrievalEngine;
+    private final RetrievalPlanService retrievalPlanService;
     @Qualifier("ragContextThreadPoolExecutor")
     private final Executor ragContextExecutor;
     @Qualifier("mcpBatchThreadPoolExecutor")
@@ -143,6 +146,17 @@ public class RetrievalEngine {
        //把这个子问题真正处理成可用的 KB/MCP 上下文
         List<NodeScore> kbIntents = filterKbIntents(intent.nodeScores());
         List<NodeScore> mcpIntents = filterMCPIntents(intent.nodeScores());
+
+        // Phase 1 records the decision only.  Existing search channels still
+        // receive their original request and therefore preserve current recall behavior.
+        RetrievalPlan retrievalPlan = retrievalPlanService.buildPlan(intent.subQuestion(), kbIntents);
+        if (!retrievalPlan.isEmpty()) {
+            log.info("Metadata retrieval plan: question='{}', targetCandidateCount={}, maxCandidatePool={}, plans={}",
+                    intent.subQuestion(),
+                    retrievalPlan.targetCandidateCount(),
+                    retrievalPlan.maxCandidatePool(),
+                    retrievalPlan.intentPlans());
+        }
 
         //拿当前子问题和它的 KB 意图，去做知识检索，并得到一个 KB 检索结果对象。
         KbResult kbResult = retrieveAndRerank(intent, kbIntents, topK);
