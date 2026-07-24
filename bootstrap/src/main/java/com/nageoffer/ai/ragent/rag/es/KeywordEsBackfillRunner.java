@@ -31,7 +31,7 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -57,16 +57,26 @@ public class KeywordEsBackfillRunner implements ApplicationRunner {
             return;
         }
         int pageSize = Math.max(100, properties.getBackfillBatchSize());
-        log.info("start keyword-es backfill, pageSize={}", pageSize);
+        Set<Long> kbIds = properties.getBackfillKbIds() == null
+                ? Set.of()
+                : properties.getBackfillKbIds().stream()
+                        .filter(java.util.Objects::nonNull)
+                        .collect(Collectors.toSet());
+        log.info("start keyword-es backfill, pageSize={}, kbIds={}", pageSize,
+                kbIds.isEmpty() ? "all" : kbIds);
 
         long current = 1;
         long totalChunks = 0;
         while (true) {
+            var query = Wrappers.lambdaQuery(KnowledgeChunkDO.class)
+                    .eq(KnowledgeChunkDO::getEnabled, 1)
+                    .orderByAsc(KnowledgeChunkDO::getId);
+            if (!kbIds.isEmpty()) {
+                query.in(KnowledgeChunkDO::getKbId, kbIds);
+            }
             IPage<KnowledgeChunkDO> page = chunkMapper.selectPage(
                     new Page<>(current, pageSize),
-                    Wrappers.lambdaQuery(KnowledgeChunkDO.class)
-                            .eq(KnowledgeChunkDO::getEnabled, 1)
-                            .orderByAsc(KnowledgeChunkDO::getId)
+                    query
             );
             List<KnowledgeChunkDO> records = page.getRecords();
             if (records == null || records.isEmpty()) {
@@ -79,18 +89,16 @@ public class KeywordEsBackfillRunner implements ApplicationRunner {
             Map<Long, KnowledgeDocumentDO> docMap = documentMapper.selectBatchIds(docIds).stream()
                     .collect(Collectors.toMap(KnowledgeDocumentDO::getId, Function.identity(), (a, b) -> a));
 
-            Map<Long, List<KnowledgeChunkDO>> grouped = records.stream()
-                    .collect(Collectors.groupingBy(KnowledgeChunkDO::getDocId));
-            for (Map.Entry<Long, List<KnowledgeChunkDO>> entry : grouped.entrySet()) {
-                Long docId = entry.getKey();
-                KnowledgeDocumentDO doc = docMap.get(docId);
+            List<KeywordEsGateway.ChunkIndexEntry> entries = new ArrayList<>(records.size());
+            for (KnowledgeChunkDO chunk : records) {
+                KnowledgeDocumentDO doc = docMap.get(chunk.getDocId());
                 if (doc == null) {
                     continue;
                 }
-                Collection<KnowledgeChunkDO> chunks = entry.getValue();
-                keywordEsGateway.upsertChunks(doc.getKbId(), doc.getId(), doc.getDocName(), chunks);
-                totalChunks += chunks.size();
+                entries.add(new KeywordEsGateway.ChunkIndexEntry(doc.getKbId(), doc.getId(), doc.getDocName(), chunk));
             }
+            keywordEsGateway.upsertChunkEntries(entries);
+            totalChunks += entries.size();
 
             if (current >= page.getPages()) {
                 break;

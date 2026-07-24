@@ -41,8 +41,10 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -60,10 +62,17 @@ public class KeywordEsGateway {
     private static final Pattern ID_PATTERN = Pattern.compile("(?i)\\bID\\s*[:：]\\s*([A-Za-z0-9_-]{2,32})");
     private static final Pattern CN_NAME_PATTERN = Pattern.compile("(?i)\\bCN\\s*Name\\s*[:：]\\s*([^\\r\\n]{1,60})");
     private static final Pattern EN_NAME_PATTERN = Pattern.compile("(?i)\\bEN\\s*Name\\s*[:：]\\s*([^\\r\\n]{1,80})");
+    /** Fields shared with Milvus that are safe and useful as ES exact filters. */
+    private static final List<String> ROUTING_METADATA_FIELDS = List.of(
+            "schema_version", "source_version", "source_document", "document_title",
+            "category", "doc_type", "entity_type", "entity_id", "section_path", "language"
+    );
 
     private final ObjectMapper objectMapper;
     private final OkHttpClient baseOkHttpClient;
     private final KeywordEsChannelProperties properties;
+
+    private volatile boolean routingMetadataMappingEnsured;
 
     public boolean available() {
         return properties.isEnabled()
@@ -72,6 +81,17 @@ public class KeywordEsGateway {
     }
 
     public List<RetrievedChunk> search(String query, int size, Set<String> kbIds) {
+        return search(query, size, kbIds, Map.of());
+    }
+
+    /**
+     * Keyword retrieval within a knowledge-base scope and an optional metadata scope.
+     * Metadata values are always emitted as filter clauses, never as full-text terms.
+     */
+    public List<RetrievedChunk> search(String query,
+                                       int size,
+                                       Set<String> kbIds,
+                                       Map<String, Object> metadataFilters) {
         if (!available() || !StringUtils.hasText(query) || size <= 0) {
             return List.of();
         }
@@ -118,6 +138,7 @@ public class KeywordEsGateway {
                         .putArray("kb_id");
                 kbIds.forEach(values::add);
             }
+            appendMetadataFilters(filter, metadataFilters);
 
             Request request = withAuthHeader(new Request.Builder()
                     .url(buildUrl("/%s/_search", properties.getIndexName()))
@@ -161,9 +182,31 @@ public class KeywordEsGateway {
             return;
         }
 
-        StringBuilder ndjson = new StringBuilder(chunks.size() * 256);
-        for (KnowledgeChunkDO chunk : chunks) {
-            if (chunk == null || chunk.getId() == null || chunk.getEnabled() == null || chunk.getEnabled() != 1) {
+        upsertChunkEntries(chunks.stream()
+                .map(chunk -> new ChunkIndexEntry(kbId, docId, title, chunk))
+                .toList());
+    }
+
+    /**
+     * Bulk upsert entries from multiple documents in one ES request. The
+     * startup backfill uses this method so a large corpus does not turn into
+     * thousands of tiny refresh=wait_for requests.
+     */
+    public void upsertChunkEntries(Collection<ChunkIndexEntry> entries) {
+        if (!available() || entries == null || entries.isEmpty()) {
+            return;
+        }
+
+        if (!ensureRoutingMetadataMappings()) {
+            log.error("ES routing metadata mapping is unavailable; skip index write to avoid an inconsistent schema");
+            return;
+        }
+
+        StringBuilder ndjson = new StringBuilder(entries.size() * 384);
+        for (ChunkIndexEntry entry : entries) {
+            KnowledgeChunkDO chunk = entry == null ? null : entry.chunk();
+            if (chunk == null || chunk.getId() == null || chunk.getEnabled() == null || chunk.getEnabled() != 1
+                    || entry.kbId() == null || entry.docId() == null) {
                 continue;
             }
             String chunkId = String.valueOf(chunk.getId());
@@ -172,17 +215,7 @@ public class KeywordEsGateway {
                     .put("_index", properties.getIndexName())
                     .put("_id", chunkId);
 
-            ObjectNode doc = objectMapper.createObjectNode();
-            doc.put("chunk_id", chunkId);
-            doc.put("kb_id", String.valueOf(kbId));
-            doc.put("doc_id", String.valueOf(docId));
-            doc.put("title", title == null ? "" : title);
-            doc.put("content", chunk.getContent() == null ? "" : chunk.getContent());
-            doc.put("keywords", buildKeywords(title, chunk.getContent()));
-            doc.put("enabled", 1);
-            if (chunk.getUpdateTime() != null) {
-                doc.put("update_time", chunk.getUpdateTime().toInstant().toString());
-            }
+            ObjectNode doc = buildIndexDocument(entry.kbId(), entry.docId(), entry.title(), chunk);
 
             ndjson.append(meta).append('\n');
             ndjson.append(doc).append('\n');
@@ -201,11 +234,31 @@ public class KeywordEsGateway {
             String raw = executeAndReadBody(request);
             JsonNode root = objectMapper.readTree(raw);
             if (root.path("errors").asBoolean(false)) {
-                log.warn("ES bulk upsert 存在失败项, docId={}, body={}", docId, raw);
+                log.warn("ES bulk upsert contains failed items, body={}", raw);
             }
         } catch (Exception ex) {
-            log.error("ES bulk upsert 失败, docId={}", docId, ex);
+            log.error("ES bulk upsert failed", ex);
         }
+    }
+
+    public record ChunkIndexEntry(Long kbId, Long docId, String title, KnowledgeChunkDO chunk) {
+    }
+
+    /** Package-visible for focused serialization tests. */
+    ObjectNode buildIndexDocument(Long kbId, Long docId, String title, KnowledgeChunkDO chunk) {
+        ObjectNode doc = objectMapper.createObjectNode();
+        doc.put("chunk_id", String.valueOf(chunk.getId()));
+        doc.put("kb_id", String.valueOf(kbId));
+        doc.put("doc_id", String.valueOf(docId));
+        doc.put("title", title == null ? "" : title);
+        doc.put("content", chunk.getContent() == null ? "" : chunk.getContent());
+        doc.put("keywords", buildKeywords(title, chunk.getContent()));
+        doc.put("enabled", 1);
+        if (chunk.getUpdateTime() != null) {
+            doc.put("update_time", chunk.getUpdateTime().toInstant().toString());
+        }
+        appendRoutingMetadata(doc, chunk.getMetadataJson());
+        return doc;
     }
 
     public void upsertChunk(Long kbId, Long docId, String title, KnowledgeChunkDO chunk) {
@@ -299,6 +352,82 @@ public class KeywordEsGateway {
                 throw new IOException("HTTP " + response.code() + ", body=" + body);
             }
             return body;
+        }
+    }
+
+    private void appendMetadataFilters(ArrayNode filter, Map<String, Object> metadataFilters) {
+        if (metadataFilters == null || metadataFilters.isEmpty()) {
+            return;
+        }
+        metadataFilters.forEach((field, rawValue) -> {
+            if (!ROUTING_METADATA_FIELDS.contains(field) || rawValue == null) {
+                return;
+            }
+            if (rawValue instanceof Collection<?> values) {
+                List<?> nonNullValues = values.stream().filter(java.util.Objects::nonNull).toList();
+                if (nonNullValues.isEmpty()) {
+                    return;
+                }
+                ArrayNode terms = filter.addObject().putObject("terms").putArray(field);
+                nonNullValues.forEach(value -> terms.add(String.valueOf(value)));
+                return;
+            }
+            filter.addObject().putObject("term").putObject(field).put("value", String.valueOf(rawValue));
+        });
+    }
+
+    private void appendRoutingMetadata(ObjectNode doc, String metadataJson) {
+        if (!StringUtils.hasText(metadataJson)) {
+            return;
+        }
+        try {
+            JsonNode metadata = objectMapper.readTree(metadataJson);
+            if (metadata == null || !metadata.isObject()) {
+                return;
+            }
+            // Preserve complete source metadata for inspection without dynamically indexing arbitrary keys.
+            doc.set("metadata", metadata);
+            for (String field : ROUTING_METADATA_FIELDS) {
+                JsonNode value = metadata.get(field);
+                if (value != null && !value.isNull() && value.isValueNode()) {
+                    doc.put(field, value.asText());
+                }
+            }
+        } catch (Exception ex) {
+            log.warn("Skip malformed chunk metadata while indexing ES, chunkId={}", doc.path("chunk_id").asText(), ex);
+        }
+    }
+
+    private boolean ensureRoutingMetadataMappings() {
+        if (routingMetadataMappingEnsured) {
+            return true;
+        }
+        synchronized (this) {
+            if (routingMetadataMappingEnsured) {
+                return true;
+            }
+            try {
+                ObjectNode body = objectMapper.createObjectNode();
+                ObjectNode mappingProperties = body.putObject("properties");
+                for (String field : ROUTING_METADATA_FIELDS) {
+                    mappingProperties.putObject(field).put("type", "keyword");
+                }
+                mappingProperties.putObject("metadata")
+                        .put("type", "object")
+                        .put("enabled", false);
+
+                Request request = withAuthHeader(new Request.Builder()
+                        .url(buildUrl("/%s/_mapping", properties.getIndexName()))
+                        .put(RequestBody.create(body.toString(), JSON)))
+                        .build();
+                executeAndReadBody(request);
+                routingMetadataMappingEnsured = true;
+                log.info("ES routing metadata mapping ensured, fields={}", ROUTING_METADATA_FIELDS);
+                return true;
+            } catch (Exception ex) {
+                log.error("Failed to ensure ES routing metadata mapping", ex);
+                return false;
+            }
         }
     }
 

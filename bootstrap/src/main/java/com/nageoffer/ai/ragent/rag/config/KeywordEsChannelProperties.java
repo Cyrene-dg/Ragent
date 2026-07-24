@@ -21,6 +21,9 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Elasticsearch 关键词检索通道配置
  */
@@ -138,4 +141,10 @@ public class KeywordEsChannelProperties {
      * 全量回填批量大小
      */
     private int backfillBatchSize = 500;
+
+    /**
+     * Optional allow-list for a maintenance backfill. Empty means all enabled
+     * chunks, while a populated list lets us safely repair only v7 first.
+     */
+    private List<Long> backfillKbIds = new ArrayList<>();
 }

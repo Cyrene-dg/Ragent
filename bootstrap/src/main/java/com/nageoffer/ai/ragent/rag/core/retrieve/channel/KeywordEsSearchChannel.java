@@ -20,7 +20,10 @@ package com.nageoffer.ai.ragent.rag.core.retrieve.channel;
 import cn.hutool.core.collection.CollUtil;
 import com.nageoffer.ai.ragent.framework.convention.RetrievedChunk;
 import com.nageoffer.ai.ragent.rag.config.KeywordEsChannelProperties;
+import com.nageoffer.ai.ragent.rag.config.MetadataRetrievalProperties;
 import com.nageoffer.ai.ragent.rag.core.intent.NodeScore;
+import com.nageoffer.ai.ragent.rag.core.retrieve.plan.ProgressiveKeywordEsPlanRetriever;
+import com.nageoffer.ai.ragent.rag.core.retrieve.plan.ProgressiveKeywordEsPlanRetriever.ProgressiveKeywordEsResult;
 import com.nageoffer.ai.ragent.rag.es.KeywordEsGateway;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +44,8 @@ public class KeywordEsSearchChannel implements SearchChannel {
 
     private final KeywordEsGateway keywordEsGateway;
     private final KeywordEsChannelProperties properties;
+    private final MetadataRetrievalProperties metadataRetrievalProperties;
+    private final ProgressiveKeywordEsPlanRetriever progressiveKeywordEsPlanRetriever;
 
     @Override
     public String getName() {
@@ -77,6 +82,29 @@ public class KeywordEsSearchChannel implements SearchChannel {
         long startTime = System.currentTimeMillis();
         try {
             String question = context.getMainQuestion();
+            if (metadataRetrievalProperties.isEnabled()
+                    && metadataRetrievalProperties.isExecutionEnabled()
+                    && context.getRetrievalPlan() != null
+                    && !context.getRetrievalPlan().isEmpty()) {
+                ProgressiveKeywordEsResult planResult = progressiveKeywordEsPlanRetriever.retrieve(
+                        question, context.getRetrievalPlan(), flattenKbIntents(context));
+                if (!planResult.shouldFallbackToLegacy()) {
+                    long latency = System.currentTimeMillis() - startTime;
+                    log.info("ES metadata-plan retrieval completed, chunks={}, levels={}, latencyMs={}",
+                            planResult.chunks().size(), planResult.executions().size(), latency);
+                    return SearchChannelResult.builder()
+                            .channelType(SearchChannelType.KEYWORD_ES)
+                            .channelName(getName())
+                            .chunks(planResult.chunks())
+                            .confidence(0.78)
+                            .latencyMs(latency)
+                            .metadata(java.util.Map.of("strategy", "metadata-plan",
+                                    "levelCount", planResult.executions().size(),
+                                    "candidateCount", planResult.chunks().size()))
+                            .build();
+                }
+                log.warn("All ES metadata-plan searches failed; fall back to legacy ES retrieval");
+            }
             Set<String> kbIds = extractKbIds(context);
             int topKMultiplier = Math.max(1, properties.getTopKMultiplier());
             int recallSize = Math.max(1, context.getTopK() * topKMultiplier);
@@ -125,6 +153,16 @@ public class KeywordEsSearchChannel implements SearchChannel {
                 .map(score -> score.getNode().getKbId())
                 .filter(StringUtils::hasText)
                 .collect(Collectors.toSet());
+    }
+
+    private List<NodeScore> flattenKbIntents(SearchContext context) {
+        if (context == null || CollUtil.isEmpty(context.getIntents())) {
+            return List.of();
+        }
+        return context.getIntents().stream()
+                .flatMap(each -> each.nodeScores().stream())
+                .filter(score -> score.getNode() != null && score.getNode().isKB())
+                .toList();
     }
 }
 
