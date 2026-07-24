@@ -34,12 +34,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Collection;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class MilvusRetrieverService implements RetrieverService {
+
+    private static final Pattern METADATA_KEY_PATTERN = Pattern.compile("[A-Za-z][A-Za-z0-9_]{0,63}");
 
     private final EmbeddingService embeddingService;
     private final MilvusClientV2 milvusClient;
@@ -74,6 +78,7 @@ public class MilvusRetrieverService implements RetrieverService {
                 .data(vectors)
                 .topK(retrieveParam.getTopK())
                 .searchParams(params)
+                .filter(buildMetadataFilter(retrieveParam.getMetadataFilters()))
                 .outputFields(List.of("doc_id", "content", "metadata"))
                 .build();
 
@@ -107,5 +112,40 @@ public class MilvusRetrieverService implements RetrieverService {
         float[] nv = new float[v.length];
         for (int i = 0; i < v.length; i++) nv[i] = (float) (v[i] / len);
         return nv;
+    }
+
+    private String buildMetadataFilter(Map<String, Object> filters) {
+        if (filters == null || filters.isEmpty()) {
+            return "";
+        }
+        return filters.entrySet().stream()
+                .filter(entry -> entry.getKey() != null && entry.getValue() != null)
+                .filter(entry -> METADATA_KEY_PATTERN.matcher(entry.getKey()).matches())
+                .map(entry -> buildMetadataPredicate(entry.getKey(), entry.getValue()))
+                .collect(Collectors.joining(" && "));
+    }
+
+    private String buildMetadataPredicate(String key, Object value) {
+        String field = "metadata[\"" + key + "\"]";
+        if (value instanceof Collection<?> values) {
+            List<String> predicates = values.stream()
+                    .filter(Objects::nonNull)
+                    .map(item -> field + " == " + toMilvusLiteral(item))
+                    .toList();
+            if (predicates.isEmpty()) {
+                return "false";
+            }
+            return "(" + String.join(" || ", predicates) + ")";
+        }
+        return field + " == " + toMilvusLiteral(value);
+    }
+
+    private String toMilvusLiteral(Object value) {
+        if (value instanceof Number || value instanceof Boolean) {
+            return String.valueOf(value);
+        }
+        return "\"" + String.valueOf(value)
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"") + "\"";
     }
 }

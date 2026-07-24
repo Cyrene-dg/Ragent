@@ -26,6 +26,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.nageoffer.ai.ragent.infra.util.LLMResponseCleaner;
+import com.nageoffer.ai.ragent.rag.config.IntentPreFilterProperties;
 import com.nageoffer.ai.ragent.rag.dao.entity.IntentNodeDO;
 import com.nageoffer.ai.ragent.rag.dao.mapper.IntentNodeMapper;
 import com.nageoffer.ai.ragent.framework.convention.ChatMessage;
@@ -62,6 +63,7 @@ public class DefaultIntentClassifier implements IntentClassifier, IntentNodeRegi
     private final PromptTemplateLoader promptTemplateLoader;
     private final IntentTreeCacheManager intentTreeCacheManager;
     private final IntentHybridRecallService intentHybridRecallService;
+    private final IntentPreFilterProperties intentPreFilterProperties;
 
     /**
      * 从Redis加载意图树并构建内存结构
@@ -140,9 +142,19 @@ public class DefaultIntentClassifier implements IntentClassifier, IntentNodeRegi
         // 每次都从Redis读取最新数据
         IntentTreeData data = loadIntentTreeData();
 
-        List<IntentNode> candidateLeafNodes = intentHybridRecallService.shortlist(question, data.leafNodes);
+        int totalLeafCount = data.leafNodes.size();
+        boolean twoStage = intentPreFilterProperties.shouldUseTwoStage(totalLeafCount);
+        List<IntentNode> candidateLeafNodes = twoStage
+                ? intentHybridRecallService.shortlist(question, data.leafNodes)
+                : data.leafNodes;
         log.info("意图精判候选规模 - question='{}', totalLeaf={}, shortlisted={}",
                 question, data.leafNodes.size(), candidateLeafNodes.size());
+        log.info("Intent classification strategy: strategy={}, question='{}', totalLeaf={}, candidateCount={}, candidateLimit={}",
+                twoStage ? "two-stage" : "direct",
+                question,
+                totalLeafCount,
+                candidateLeafNodes.size(),
+                intentPreFilterProperties.getCandidateLimit());
         String systemPrompt = buildPrompt(candidateLeafNodes);
         ChatRequest request = ChatRequest.builder()
                 .messages(List.of(
@@ -277,7 +289,7 @@ public class DefaultIntentClassifier implements IntentClassifier, IntentNodeRegi
         }
 
         // 2. DO -> IntentNode（第一遍：先把所有节点建出来，放到 map 里）
-        Map<String, IntentNode> id2Node = new HashMap<>();
+        Map<ScopedIntentKey, IntentNode> id2Node = new HashMap<>();
         for (IntentNodeDO each : intentNodeDOList) {
             IntentNode node = BeanUtil.toBean(each, IntentNode.class);
             // 数据库中的 code 映射到 IntentNode 的 id/parentId
@@ -289,7 +301,7 @@ public class DefaultIntentClassifier implements IntentClassifier, IntentNodeRegi
             if (node.getChildren() == null) {
                 node.setChildren(new ArrayList<>());
             }
-            id2Node.put(node.getId(), node);
+            id2Node.put(scopedKey(node.getKbId(), node.getId()), node);
         }
 
         // 3. 第二遍：根据 parentId 组装 parent -> children
@@ -302,7 +314,7 @@ public class DefaultIntentClassifier implements IntentClassifier, IntentNodeRegi
                 continue;
             }
 
-            IntentNode parent = id2Node.get(parentId);
+            IntentNode parent = id2Node.get(scopedKey(node.getKbId(), parentId));
             if (parent == null) {
                 // 找不到父节点，兜底也当作根节点，避免节点丢失
                 roots.add(node);
@@ -320,6 +332,13 @@ public class DefaultIntentClassifier implements IntentClassifier, IntentNodeRegi
         fillFullPath(roots, null);
 
         return roots;
+    }
+
+    private static ScopedIntentKey scopedKey(String kbId, String intentCode) {
+        return new ScopedIntentKey(kbId, intentCode);
+    }
+
+    private record ScopedIntentKey(String kbId, String intentCode) {
     }
 
     /**

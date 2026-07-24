@@ -1,0 +1,70 @@
+[
+  {
+    "intentCode": "genshin_v7_character_profile",
+    "metadataFilters": {
+      "category": "character",
+      "doc_type": "character_profile"
+    }
+  },
+  {
+    "intentCode": "genshin_v7_character_skill",
+    "metadataFilters": {
+      "category": "character",
+      "doc_type": [
+        "character_skill",
+        "character_constellation"
+      ]
+    }
+  },
+  {
+    "intentCode": "genshin_v7_character_story",
+    "metadataFilters": {
+      "category": "character",
+      "doc_type": "character_story"
+    }
+  },
+  {
+    "intentCode": "genshin_v7_weapon_detail",
+    "metadataFilters": {
+      "category": "weapon",
+      "doc_type": [
+        "weapon_profile",
+        "weapon_passive"
+      ]
+    }
+  },
+  {
+    "intentCode": "genshin_v7_artifact_detail",
+    "metadataFilters": {
+      "category": "artifact"
+    }
+  },
+  {
+    "intentCode": "genshin_v7_quest_flow",
+    "metadataFilters": {
+      "category": "quest",
+      "doc_type": "quest_flow"
+    }
+  },
+  {
+    "intentCode": "genshin_v7_story",
+    "metadataFilters": {
+      "category": [
+        "story",
+        "lore"
+      ]
+    }
+  },
+  {
+    "intentCode": "genshin_v7_achievement_condition",
+    "metadataFilters": {
+      "category": "achievement"
+    }
+  },
+  {
+    "intentCode": "genshin_v7_material_detail",
+    "metadataFilters": {
+      "category": "material"
+    }
+  }
+]

@@ -1,0 +1,866 @@
+[
+  {
+    "source_document": "characters/avatar_10000002_神里绫华.md",
+    "document_title": "神里绫华",
+    "chunk_count": 9,
+    "char_count": 4103
+  },
+  {
+    "source_document": "characters/avatar_10000003_琴.md",
+    "document_title": "琴",
+    "chunk_count": 9,
+    "char_count": 4003
+  },
+  {
+    "source_document": "characters/avatar_10000005_旅行者.md",
+    "document_title": "旅行者",
+    "chunk_count": 5,
+    "char_count": 1734
+  },
+  {
+    "source_document": "characters/avatar_10000006_丽莎.md",
+    "document_title": "丽莎",
+    "chunk_count": 6,
+    "char_count": 2796
+  },
+  {
+    "source_document": "characters/avatar_10000007_旅行者.md",
+    "document_title": "旅行者",
+    "chunk_count": 5,
+    "char_count": 1734
+  },
+  {
+    "source_document": "characters/avatar_10000014_芭芭拉.md",
+    "document_title": "芭芭拉",
+    "chunk_count": 7,
+    "char_count": 3137
+  },
+  {
+    "source_document": "characters/avatar_10000015_凯亚.md",
+    "document_title": "凯亚",
+    "chunk_count": 8,
+    "char_count": 3678
+  },
+  {
+    "source_document": "characters/avatar_10000016_迪卢克.md",
+    "document_title": "迪卢克",
+    "chunk_count": 10,
+    "char_count": 4162
+  },
+  {
+    "source_document": "characters/avatar_10000020_雷泽.md",
+    "document_title": "雷泽",
+    "chunk_count": 7,
+    "char_count": 3113
+  },
+  {
+    "source_document": "characters/avatar_10000021_安柏.md",
+    "document_title": "安柏",
+    "chunk_count": 8,
+    "char_count": 3385
+  },
+  {
+    "source_document": "characters/avatar_10000022_温迪.md",
+    "document_title": "温迪",
+    "chunk_count": 7,
+    "char_count": 3767
+  },
+  {
+    "source_document": "characters/avatar_10000023_香菱.md",
+    "document_title": "香菱",
+    "chunk_count": 7,
+    "char_count": 3203
+  },
+  {
+    "source_document": "characters/avatar_10000024_北斗.md",
+    "document_title": "北斗",
+    "chunk_count": 8,
+    "char_count": 3801
+  },
+  {
+    "source_document": "characters/avatar_10000025_行秋.md",
+    "document_title": "行秋",
+    "chunk_count": 8,
+    "char_count": 3676
+  },
+  {
+    "source_document": "characters/avatar_10000026_魈.md",
+    "document_title": "魈",
+    "chunk_count": 8,
+    "char_count": 3615
+  },
+  {
+    "source_document": "characters/avatar_10000027_凝光.md",
+    "document_title": "凝光",
+    "chunk_count": 8,
+    "char_count": 3826
+  },
+  {
+    "source_document": "characters/avatar_10000029_可莉.md",
+    "document_title": "可莉",
+    "chunk_count": 7,
+    "char_count": 3217
+  },
+  {
+    "source_document": "characters/avatar_10000030_钟离.md",
+    "document_title": "钟离",
+    "chunk_count": 10,
+    "char_count": 4835
+  },
+  {
+    "source_document": "characters/avatar_10000031_菲谢尔.md",
+    "document_title": "菲谢尔",
+    "chunk_count": 10,
+    "char_count": 4354
+  },
+  {
+    "source_document": "characters/avatar_10000032_班尼特.md",
+    "document_title": "班尼特",
+    "chunk_count": 7,
+    "char_count": 3681
+  },
+  {
+    "source_document": "characters/avatar_10000033_达达利亚.md",
+    "document_title": "达达利亚",
+    "chunk_count": 9,
+    "char_count": 4426
+  },
+  {
+    "source_document": "characters/avatar_10000034_诺艾尔.md",
+    "document_title": "诺艾尔",
+    "chunk_count": 9,
+    "char_count": 4333
+  },
+  {
+    "source_document": "characters/avatar_10000035_七七.md",
+    "document_title": "七七",
+    "chunk_count": 7,
+    "char_count": 3076
+  },
+  {
+    "source_document": "characters/avatar_10000036_重云.md",
+    "document_title": "重云",
+    "chunk_count": 9,
+    "char_count": 4015
+  },
+  {
+    "source_document": "characters/avatar_10000037_甘雨.md",
+    "document_title": "甘雨",
+    "chunk_count": 9,
+    "char_count": 4091
+  },
+  {
+    "source_document": "characters/avatar_10000038_阿贝多.md",
+    "document_title": "阿贝多",
+    "chunk_count": 8,
+    "char_count": 3863
+  },
+  {
+    "source_document": "characters/avatar_10000039_迪奥娜.md",
+    "document_title": "迪奥娜",
+    "chunk_count": 9,
+    "char_count": 4143
+  },
+  {
+    "source_document": "characters/avatar_10000041_莫娜.md",
+    "document_title": "莫娜",
+    "chunk_count": 9,
+    "char_count": 4183
+  },
+  {
+    "source_document": "characters/avatar_10000042_刻晴.md",
+    "document_title": "刻晴",
+    "chunk_count": 11,
+    "char_count": 4674
+  },
+  {
+    "source_document": "characters/avatar_10000043_砂糖.md",
+    "document_title": "砂糖",
+    "chunk_count": 10,
+    "char_count": 4381
+  },
+  {
+    "source_document": "characters/avatar_10000044_辛焱.md",
+    "document_title": "辛焱",
+    "chunk_count": 9,
+    "char_count": 4534
+  },
+  {
+    "source_document": "characters/avatar_10000045_罗莎莉亚.md",
+    "document_title": "罗莎莉亚",
+    "chunk_count": 8,
+    "char_count": 3658
+  },
+  {
+    "source_document": "characters/avatar_10000046_胡桃.md",
+    "document_title": "胡桃",
+    "chunk_count": 10,
+    "char_count": 5183
+  },
+  {
+    "source_document": "characters/avatar_10000047_枫原万叶.md",
+    "document_title": "枫原万叶",
+    "chunk_count": 10,
+    "char_count": 4653
+  },
+  {
+    "source_document": "characters/avatar_10000048_烟绯.md",
+    "document_title": "烟绯",
+    "chunk_count": 8,
+    "char_count": 3681
+  },
+  {
+    "source_document": "characters/avatar_10000049_宵宫.md",
+    "document_title": "宵宫",
+    "chunk_count": 12,
+    "char_count": 5373
+  },
+  {
+    "source_document": "characters/avatar_10000050_托马.md",
+    "document_title": "托马",
+    "chunk_count": 8,
+    "char_count": 4020
+  },
+  {
+    "source_document": "characters/avatar_10000051_优菈.md",
+    "document_title": "优菈",
+    "chunk_count": 11,
+    "char_count": 5735
+  },
+  {
+    "source_document": "characters/avatar_10000052_雷电将军.md",
+    "document_title": "雷电将军",
+    "chunk_count": 10,
+    "char_count": 4656
+  },
+  {
+    "source_document": "characters/avatar_10000053_早柚.md",
+    "document_title": "早柚",
+    "chunk_count": 9,
+    "char_count": 4253
+  },
+  {
+    "source_document": "characters/avatar_10000054_珊瑚宫心海.md",
+    "document_title": "珊瑚宫心海",
+    "chunk_count": 7,
+    "char_count": 3346
+  },
+  {
+    "source_document": "characters/avatar_10000055_五郎.md",
+    "document_title": "五郎",
+    "chunk_count": 8,
+    "char_count": 3890
+  },
+  {
+    "source_document": "characters/avatar_10000056_九条裟罗.md",
+    "document_title": "九条裟罗",
+    "chunk_count": 9,
+    "char_count": 4370
+  },
+  {
+    "source_document": "characters/avatar_10000057_荒泷一斗.md",
+    "document_title": "荒泷一斗",
+    "chunk_count": 12,
+    "char_count": 5230
+  },
+  {
+    "source_document": "characters/avatar_10000058_八重神子.md",
+    "document_title": "八重神子",
+    "chunk_count": 11,
+    "char_count": 5449
+  },
+  {
+    "source_document": "characters/avatar_10000059_鹿野院平藏.md",
+    "document_title": "鹿野院平藏",
+    "chunk_count": 12,
+    "char_count": 7426
+  },
+  {
+    "source_document": "characters/avatar_10000060_夜兰.md",
+    "document_title": "夜兰",
+    "chunk_count": 11,
+    "char_count": 5549
+  },
+  {
+    "source_document": "characters/avatar_10000061_绮良良.md",
+    "document_title": "绮良良",
+    "chunk_count": 12,
+    "char_count": 6410
+  },
+  {
+    "source_document": "characters/avatar_10000062_埃洛伊.md",
+    "document_title": "埃洛伊",
+    "chunk_count": 5,
+    "char_count": 2236
+  },
+  {
+    "source_document": "characters/avatar_10000063_申鹤.md",
+    "document_title": "申鹤",
+    "chunk_count": 9,
+    "char_count": 4293
+  },
+  {
+    "source_document": "characters/avatar_10000064_云堇.md",
+    "document_title": "云堇",
+    "chunk_count": 9,
+    "char_count": 4304
+  },
+  {
+    "source_document": "characters/avatar_10000065_久岐忍.md",
+    "document_title": "久岐忍",
+    "chunk_count": 11,
+    "char_count": 5149
+  },
+  {
+    "source_document": "characters/avatar_10000066_神里绫人.md",
+    "document_title": "神里绫人",
+    "chunk_count": 11,
+    "char_count": 6057
+  },
+  {
+    "source_document": "characters/avatar_10000067_柯莱.md",
+    "document_title": "柯莱",
+    "chunk_count": 11,
+    "char_count": 5419
+  },
+  {
+    "source_document": "characters/avatar_10000068_多莉.md",
+    "document_title": "多莉",
+    "chunk_count": 9,
+    "char_count": 4489
+  },
+  {
+    "source_document": "characters/avatar_10000069_提纳里.md",
+    "document_title": "提纳里",
+    "chunk_count": 11,
+    "char_count": 6337
+  },
+  {
+    "source_document": "characters/avatar_10000070_妮露.md",
+    "document_title": "妮露",
+    "chunk_count": 10,
+    "char_count": 4290
+  },
+  {
+    "source_document": "characters/avatar_10000071_赛诺.md",
+    "document_title": "赛诺",
+    "chunk_count": 11,
+    "char_count": 5679
+  },
+  {
+    "source_document": "characters/avatar_10000072_坎蒂丝.md",
+    "document_title": "坎蒂丝",
+    "chunk_count": 9,
+    "char_count": 4294
+  },
+  {
+    "source_document": "characters/avatar_10000073_纳西妲.md",
+    "document_title": "纳西妲",
+    "chunk_count": 13,
+    "char_count": 5179
+  },
+  {
+    "source_document": "characters/avatar_10000074_莱依拉.md",
+    "document_title": "莱依拉",
+    "chunk_count": 10,
+    "char_count": 5621
+  },
+  {
+    "source_document": "characters/avatar_10000075_流浪者.md",
+    "document_title": "流浪者",
+    "chunk_count": 12,
+    "char_count": 6413
+  },
+  {
+    "source_document": "characters/avatar_10000076_珐露珊.md",
+    "document_title": "珐露珊",
+    "chunk_count": 10,
+    "char_count": 5639
+  },
+  {
+    "source_document": "characters/avatar_10000077_瑶瑶.md",
+    "document_title": "瑶瑶",
+    "chunk_count": 12,
+    "char_count": 5551
+  },
+  {
+    "source_document": "characters/avatar_10000078_艾尔海森.md",
+    "document_title": "艾尔海森",
+    "chunk_count": 11,
+    "char_count": 6840
+  },
+  {
+    "source_document": "characters/avatar_10000079_迪希雅.md",
+    "document_title": "迪希雅",
+    "chunk_count": 12,
+    "char_count": 6487
+  },
+  {
+    "source_document": "characters/avatar_10000080_米卡.md",
+    "document_title": "米卡",
+    "chunk_count": 12,
+    "char_count": 6759
+  },
+  {
+    "source_document": "characters/avatar_10000081_卡维.md",
+    "document_title": "卡维",
+    "chunk_count": 16,
+    "char_count": 10075
+  },
+  {
+    "source_document": "characters/avatar_10000082_白术.md",
+    "document_title": "白术",
+    "chunk_count": 13,
+    "char_count": 7357
+  },
+  {
+    "source_document": "characters/avatar_10000083_琳妮特.md",
+    "document_title": "琳妮特",
+    "chunk_count": 13,
+    "char_count": 6941
+  },
+  {
+    "source_document": "characters/avatar_10000084_林尼.md",
+    "document_title": "林尼",
+    "chunk_count": 13,
+    "char_count": 7583
+  },
+  {
+    "source_document": "characters/avatar_10000085_菲米尼.md",
+    "document_title": "菲米尼",
+    "chunk_count": 12,
+    "char_count": 7676
+  },
+  {
+    "source_document": "characters/avatar_10000086_莱欧斯利.md",
+    "document_title": "莱欧斯利",
+    "chunk_count": 13,
+    "char_count": 7577
+  },
+  {
+    "source_document": "characters/avatar_10000087_那维莱特.md",
+    "document_title": "那维莱特",
+    "chunk_count": 11,
+    "char_count": 5413
+  },
+  {
+    "source_document": "characters/avatar_10000088_夏洛蒂.md",
+    "document_title": "夏洛蒂",
+    "chunk_count": 12,
+    "char_count": 7411
+  },
+  {
+    "source_document": "characters/avatar_10000089_芙宁娜.md",
+    "document_title": "芙宁娜",
+    "chunk_count": 14,
+    "char_count": 6801
+  },
+  {
+    "source_document": "characters/avatar_10000090_夏沃蕾.md",
+    "document_title": "夏沃蕾",
+    "chunk_count": 12,
+    "char_count": 6988
+  },
+  {
+    "source_document": "characters/avatar_10000091_娜维娅.md",
+    "document_title": "娜维娅",
+    "chunk_count": 13,
+    "char_count": 7194
+  },
+  {
+    "source_document": "characters/avatar_10000092_嘉明.md",
+    "document_title": "嘉明",
+    "chunk_count": 12,
+    "char_count": 7813
+  },
+  {
+    "source_document": "characters/avatar_10000093_闲云.md",
+    "document_title": "闲云",
+    "chunk_count": 13,
+    "char_count": 6980
+  },
+  {
+    "source_document": "characters/avatar_10000094_千织.md",
+    "document_title": "千织",
+    "chunk_count": 13,
+    "char_count": 6646
+  },
+  {
+    "source_document": "characters/avatar_10000095_希格雯.md",
+    "document_title": "希格雯",
+    "chunk_count": 16,
+    "char_count": 8955
+  },
+  {
+    "source_document": "characters/avatar_10000096_阿蕾奇诺.md",
+    "document_title": "阿蕾奇诺",
+    "chunk_count": 12,
+    "char_count": 6742
+  },
+  {
+    "source_document": "characters/avatar_10000097_赛索斯.md",
+    "document_title": "赛索斯",
+    "chunk_count": 12,
+    "char_count": 7946
+  },
+  {
+    "source_document": "characters/avatar_10000098_克洛琳德.md",
+    "document_title": "克洛琳德",
+    "chunk_count": 15,
+    "char_count": 8963
+  },
+  {
+    "source_document": "characters/avatar_10000099_艾梅莉埃.md",
+    "document_title": "艾梅莉埃",
+    "chunk_count": 12,
+    "char_count": 6062
+  },
+  {
+    "source_document": "characters/avatar_10000100_卡齐娜.md",
+    "document_title": "卡齐娜",
+    "chunk_count": 11,
+    "char_count": 7106
+  },
+  {
+    "source_document": "characters/avatar_10000101_基尼奇.md",
+    "document_title": "基尼奇",
+    "chunk_count": 14,
+    "char_count": 8842
+  },
+  {
+    "source_document": "characters/avatar_10000102_玛拉妮.md",
+    "document_title": "玛拉妮",
+    "chunk_count": 13,
+    "char_count": 8277
+  },
+  {
+    "source_document": "characters/avatar_10000103_希诺宁.md",
+    "document_title": "希诺宁",
+    "chunk_count": 14,
+    "char_count": 8996
+  },
+  {
+    "source_document": "characters/avatar_10000104_恰斯卡.md",
+    "document_title": "恰斯卡",
+    "chunk_count": 16,
+    "char_count": 9618
+  },
+  {
+    "source_document": "characters/avatar_10000105_欧洛伦.md",
+    "document_title": "欧洛伦",
+    "chunk_count": 12,
+    "char_count": 6983
+  },
+  {
+    "source_document": "characters/avatar_10000106_玛薇卡.md",
+    "document_title": "玛薇卡",
+    "chunk_count": 13,
+    "char_count": 8353
+  },
+  {
+    "source_document": "characters/avatar_10000107_茜特菈莉.md",
+    "document_title": "茜特菈莉",
+    "chunk_count": 15,
+    "char_count": 9336
+  },
+  {
+    "source_document": "characters/avatar_10000108_蓝砚.md",
+    "document_title": "蓝砚",
+    "chunk_count": 11,
+    "char_count": 6387
+  },
+  {
+    "source_document": "characters/avatar_10000109_梦见月瑞希.md",
+    "document_title": "梦见月瑞希",
+    "chunk_count": 13,
+    "char_count": 8789
+  },
+  {
+    "source_document": "characters/avatar_10000110_伊安珊.md",
+    "document_title": "伊安珊",
+    "chunk_count": 16,
+    "char_count": 10131
+  },
+  {
+    "source_document": "characters/avatar_10000111_瓦雷莎.md",
+    "document_title": "瓦雷莎",
+    "chunk_count": 19,
+    "char_count": 11823
+  },
+  {
+    "source_document": "characters/avatar_10000112_爱可菲.md",
+    "document_title": "爱可菲",
+    "chunk_count": 18,
+    "char_count": 10726
+  },
+  {
+    "source_document": "characters/avatar_10000113_伊法.md",
+    "document_title": "伊法",
+    "chunk_count": 11,
+    "char_count": 6120
+  },
+  {
+    "source_document": "characters/avatar_10000114_丝柯克.md",
+    "document_title": "丝柯克",
+    "chunk_count": 13,
+    "char_count": 6660
+  },
+  {
+    "source_document": "characters/avatar_10000115_塔利雅.md",
+    "document_title": "塔利雅",
+    "chunk_count": 11,
+    "char_count": 6774
+  },
+  {
+    "source_document": "characters/avatar_10000116_伊涅芙.md",
+    "document_title": "伊涅芙",
+    "chunk_count": 13,
+    "char_count": 7630
+  },
+  {
+    "source_document": "characters/avatar_10000119_菈乌玛.md",
+    "document_title": "菈乌玛",
+    "chunk_count": 13,
+    "char_count": 7108
+  },
+  {
+    "source_document": "characters/avatar_10000120_菲林斯.md",
+    "document_title": "菲林斯",
+    "chunk_count": 15,
+    "char_count": 10061
+  },
+  {
+    "source_document": "characters/avatar_10000121_爱诺.md",
+    "document_title": "爱诺",
+    "chunk_count": 12,
+    "char_count": 6157
+  },
+  {
+    "source_document": "characters/avatar_10000122_奈芙尔.md",
+    "document_title": "奈芙尔",
+    "chunk_count": 13,
+    "char_count": 8061
+  },
+  {
+    "source_document": "characters/avatar_10000123_杜林.md",
+    "document_title": "杜林",
+    "chunk_count": 16,
+    "char_count": 9568
+  },
+  {
+    "source_document": "characters/avatar_10000124_雅珂达.md",
+    "document_title": "雅珂达",
+    "chunk_count": 14,
+    "char_count": 8151
+  },
+  {
+    "source_document": "characters/avatar_10000125_哥伦比娅.md",
+    "document_title": "哥伦比娅",
+    "chunk_count": 13,
+    "char_count": 7305
+  },
+  {
+    "source_document": "characters/avatar_10000126_兹白.md",
+    "document_title": "兹白",
+    "chunk_count": 11,
+    "char_count": 5552
+  },
+  {
+    "source_document": "characters/avatar_10000127_叶洛亚.md",
+    "document_title": "叶洛亚",
+    "chunk_count": 13,
+    "char_count": 8728
+  },
+  {
+    "source_document": "characters/avatar_10000128_法尔伽.md",
+    "document_title": "法尔伽",
+    "chunk_count": 13,
+    "char_count": 9834
+  },
+  {
+    "source_document": "characters/avatar_10000902_胡桃_试用.md",
+    "document_title": "胡桃(试用)",
+    "chunk_count": 4,
+    "char_count": 1408
+  },
+  {
+    "source_document": "characters/avatar_10000903_伊涅芙.md",
+    "document_title": "伊涅芙",
+    "chunk_count": 5,
+    "char_count": 1373
+  },
+  {
+    "source_document": "main_quests/main_quest_18000_拾枝者_戴因斯雷布.md",
+    "document_title": "拾枝者·戴因斯雷布",
+    "chunk_count": 2,
+    "char_count": 1279
+  },
+  {
+    "source_document": "main_quests/main_quest_40058_宵暗御所黑染.md",
+    "document_title": "宵暗御所黑染",
+    "chunk_count": 2,
+    "char_count": 1113
+  },
+  {
+    "source_document": "main_quests/main_quest_70141_山中之物.md",
+    "document_title": "山中之物",
+    "chunk_count": 3,
+    "char_count": 2064
+  },
+  {
+    "source_document": "main_quests/main_quest_71018_孤舰履孤云.md",
+    "document_title": "孤舰履孤云",
+    "chunk_count": 2,
+    "char_count": 1240
+  },
+  {
+    "source_document": "main_quests/main_quest_72106_绀田事话.md",
+    "document_title": "绀田事话",
+    "chunk_count": 2,
+    "char_count": 1317
+  },
+  {
+    "source_document": "main_quests/main_quest_72107_祭神奏上.md",
+    "document_title": "祭神奏上",
+    "chunk_count": 2,
+    "char_count": 1283
+  },
+  {
+    "source_document": "main_quests/main_quest_72166_倾听木簧笛的八音曲.md",
+    "document_title": "倾听木簧笛的八音曲",
+    "chunk_count": 2,
+    "char_count": 1244
+  },
+  {
+    "source_document": "main_quests/main_quest_72265_顶替者的秘密.md",
+    "document_title": "顶替者的秘密",
+    "chunk_count": 2,
+    "char_count": 1290
+  },
+  {
+    "source_document": "main_quests/main_quest_72266_蒲公英的归宿.md",
+    "document_title": "蒲公英的归宿",
+    "chunk_count": 2,
+    "char_count": 1148
+  },
+  {
+    "source_document": "main_quests/main_quest_73001_维摩庄的孩子.md",
+    "document_title": "维摩庄的孩子",
+    "chunk_count": 2,
+    "char_count": 1107
+  },
+  {
+    "source_document": "main_quests/main_quest_73002_远足.md",
+    "document_title": "远足",
+    "chunk_count": 2,
+    "char_count": 1126
+  },
+  {
+    "source_document": "main_quests/main_quest_73061_星夜之章.md",
+    "document_title": "星夜之章",
+    "chunk_count": 3,
+    "char_count": 1450
+  },
+  {
+    "source_document": "main_quests/main_quest_73063_月升之章.md",
+    "document_title": "月升之章",
+    "chunk_count": 3,
+    "char_count": 1436
+  },
+  {
+    "source_document": "main_quests/main_quest_73066_终章.md",
+    "document_title": "终章",
+    "chunk_count": 3,
+    "char_count": 1571
+  },
+  {
+    "source_document": "weapons/weapon_11427_船坞长剑.md",
+    "document_title": "船坞长剑",
+    "chunk_count": 3,
+    "char_count": 1162
+  },
+  {
+    "source_document": "weapons/weapon_11503_苍古自由之誓.md",
+    "document_title": "苍古自由之誓",
+    "chunk_count": 5,
+    "char_count": 1408
+  },
+  {
+    "source_document": "weapons/weapon_11509_雾切之回光.md",
+    "document_title": "雾切之回光",
+    "chunk_count": 3,
+    "char_count": 1322
+  },
+  {
+    "source_document": "weapons/weapon_11516_岩峰巡歌.md",
+    "document_title": "岩峰巡歌",
+    "chunk_count": 3,
+    "char_count": 1125
+  },
+  {
+    "source_document": "weapons/weapon_12427_便携动力锯.md",
+    "document_title": "便携动力锯",
+    "chunk_count": 3,
+    "char_count": 1159
+  },
+  {
+    "source_document": "weapons/weapon_12503_松籁响起之时.md",
+    "document_title": "松籁响起之时",
+    "chunk_count": 3,
+    "char_count": 1311
+  },
+  {
+    "source_document": "weapons/weapon_12513_山王长牙.md",
+    "document_title": "山王长牙",
+    "chunk_count": 3,
+    "char_count": 1119
+  },
+  {
+    "source_document": "weapons/weapon_12514_焚曜千阳.md",
+    "document_title": "焚曜千阳",
+    "chunk_count": 3,
+    "char_count": 1270
+  },
+  {
+    "source_document": "weapons/weapon_14520_纺夜天镜.md",
+    "document_title": "纺夜天镜",
+    "chunk_count": 5,
+    "char_count": 1425
+  },
+  {
+    "source_document": "weapons/weapon_15503_终末嗟叹之诗.md",
+    "document_title": "终末嗟叹之诗",
+    "chunk_count": 3,
+    "char_count": 1471
+  },
+  {
+    "source_document": "weapons/weapon_15507_冬极白星.md",
+    "document_title": "冬极白星",
+    "chunk_count": 3,
+    "char_count": 1122
+  },
+  {
+    "source_document": "weapons/weapon_15509_飞雷之弦振.md",
+    "document_title": "飞雷之弦振",
+    "chunk_count": 3,
+    "char_count": 1343
+  },
+  {
+    "source_document": "weapons/weapon_15512_最初的大魔术.md",
+    "document_title": "最初的大魔术",
+    "chunk_count": 3,
+    "char_count": 1245
+  },
+  {
+    "source_document": "weapons/weapon_15513_白雨心弦.md",
+    "document_title": "白雨心弦",
+    "chunk_count": 3,
+    "char_count": 1267
+  },
+  {
+    "source_document": "weapons/weapon_15515_黎明破晓之史.md",
+    "document_title": "黎明破晓之史",
+    "chunk_count": 5,
+    "char_count": 1569
+  }
+]

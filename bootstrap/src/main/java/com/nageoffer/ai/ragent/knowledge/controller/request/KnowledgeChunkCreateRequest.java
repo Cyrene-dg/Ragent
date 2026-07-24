@@ -19,6 +19,8 @@ package com.nageoffer.ai.ragent.knowledge.controller.request;
 
 import lombok.Data;
 
+import java.util.Map;
+
 /**
  * 知识库 Chunk 创建请求
  */
@@ -39,4 +41,9 @@ public class KnowledgeChunkCreateRequest {
      * 分块 ID
      */
     private String chunkId;
+
+    /**
+     * Chunk 级检索元数据，例如 category、entity_type、entity_id、doc_type。
+     */
+    private Map<String, Object> metadata;
 }

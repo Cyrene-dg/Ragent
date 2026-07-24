@@ -68,6 +68,11 @@ public class KnowledgeChunkVO {
     private Integer tokenCount;
 
     /**
+     * Chunk 级检索元数据 JSON。
+     */
+    private String metadataJson;
+
+    /**
      * 是否启用 0：禁用 1：启用
      */
     private Integer enabled;

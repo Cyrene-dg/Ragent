@@ -26,6 +26,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nageoffer.ai.ragent.knowledge.controller.request.KnowledgeChunkBatchRequest;
 import com.nageoffer.ai.ragent.knowledge.controller.request.KnowledgeChunkCreateRequest;
 import com.nageoffer.ai.ragent.knowledge.controller.request.KnowledgeChunkPageRequest;
@@ -56,7 +58,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -74,6 +78,7 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
     private final TokenCounterService tokenCounterService;
     private final VectorStoreService vectorStoreService;
     private final KeywordEsGateway keywordEsGateway;
+    private final ObjectMapper objectMapper;
 
     @Override
     public Boolean existsByDocId(String docId) {
@@ -139,6 +144,7 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
                 .contentHash(contentHash)
                 .charCount(charCount)
                 .tokenCount(tokenCount)
+                .metadataJson(serializeMetadata(requestParam.getMetadata()))
                 .enabled(1)
                 .createdBy(UserContext.getUsername())
                 .build();
@@ -210,6 +216,7 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
                     .contentHash(calculateHash(content))
                     .charCount(content.length())
                     .tokenCount(resolveTokenCount(content))
+                    .metadataJson(serializeMetadata(request.getMetadata()))
                     .enabled(1)
                     .createdBy(username)
                     .build();
@@ -218,6 +225,14 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
 
         // 批量写入数据库，向量索引由上层统一处理以避免重复计算
         chunkMapper.insert(chunkDOList);
+        KnowledgeDocumentDO documentUpdate = new KnowledgeDocumentDO();
+        documentUpdate.setId(documentDO.getId());
+        documentUpdate.setChunkCount(Math.toIntExact(chunkMapper.selectCount(
+                Wrappers.lambdaQuery(KnowledgeChunkDO.class)
+                        .eq(KnowledgeChunkDO::getDocId, docId)
+                        .eq(KnowledgeChunkDO::getDeleted, 0)
+        )));
+        documentMapper.updateById(documentUpdate);
 
         if (writeVector) {
             String kbIdStr = String.valueOf(documentDO.getKbId());
@@ -226,6 +241,7 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
                             .chunkId(String.valueOf(each.getId()))
                             .content(each.getContent())
                             .index(each.getChunkIndex())
+                            .metadata(deserializeMetadata(each.getMetadataJson()))
                             .build())
                     .toList();
             if (CollUtil.isNotEmpty(vectorChunks)) {
@@ -248,16 +264,24 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
 
         String newContent = requestParam.getContent();
         Assert.notBlank(newContent, () -> new ClientException("Chunk 内容不能为空"));
-
-        if (newContent.equals(chunkDO.getContent())) {
+        boolean contentChanged = !newContent.equals(chunkDO.getContent());
+        boolean metadataChanged = requestParam.getMetadata() != null;
+        if (!contentChanged && !metadataChanged) {
             return;
         }
 
-        chunkDO.setContent(newContent);
-        chunkDO.setContentHash(calculateHash(newContent));
-        chunkDO.setCharCount(newContent.length());
+        if (contentChanged) {
+            chunkDO.setContent(newContent);
+            chunkDO.setContentHash(calculateHash(newContent));
+            chunkDO.setCharCount(newContent.length());
+        }
         String embeddingModel = resolveEmbeddingModel(documentDO.getKbId());
-        chunkDO.setTokenCount(resolveTokenCount(newContent));
+        if (contentChanged) {
+            chunkDO.setTokenCount(resolveTokenCount(newContent));
+        }
+        if (metadataChanged) {
+            chunkDO.setMetadataJson(serializeMetadata(requestParam.getMetadata()));
+        }
         chunkDO.setUpdatedBy(UserContext.getUsername());
 
         chunkMapper.updateById(chunkDO);
@@ -271,9 +295,10 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
                 docId,
                 VectorChunk.builder()
                         .chunkId(chunkId)
-                        .content(newContent)
+                        .content(chunkDO.getContent())
                         .index(chunkDO.getChunkIndex())
-                        .embedding(toArray(embedContent(newContent, embeddingModel)))
+                        .metadata(deserializeMetadata(chunkDO.getMetadataJson()))
+                        .embedding(toArray(embedContent(chunkDO.getContent(), embeddingModel)))
                         .build()
         );
         syncChunksToKeywordEs(documentDO, List.of(chunkDO));
@@ -427,7 +452,8 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
                         each -> VectorChunk.builder()
                                 .content(each.getContent())
                                 .index(each.getChunkIndex())
-                                .chunkId(IdUtil.getSnowflakeNextIdStr())
+                                .chunkId(String.valueOf(each.getId()))
+                                .metadata(deserializeMetadata(each.getMetadataJson()))
                                 .build()
                 )
                 .collect(Collectors.toList());
@@ -545,6 +571,7 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
                 .index(chunkDO.getChunkIndex())
                 .content(chunkDO.getContent())
                 .chunkId(String.valueOf(chunkDO.getId()))
+                .metadata(deserializeMetadata(chunkDO.getMetadataJson()))
                 .embedding(vector)
                 .build();
         vectorStoreService.indexDocumentChunks(kbId, docId, List.of(chunk));
@@ -629,6 +656,30 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
             return 0;
         }
         return tokenCounterService.countTokens(content);
+    }
+
+    private String serializeMetadata(Map<String, Object> metadata) {
+        if (metadata == null || metadata.isEmpty()) {
+            return null;
+        }
+        try {
+            return objectMapper.writeValueAsString(metadata);
+        } catch (Exception ex) {
+            throw new ClientException("Chunk 元数据序列化失败");
+        }
+    }
+
+    private Map<String, Object> deserializeMetadata(String metadataJson) {
+        if (!StringUtils.hasText(metadataJson)) {
+            return Collections.emptyMap();
+        }
+        try {
+            return objectMapper.readValue(metadataJson, new TypeReference<>() {
+            });
+        } catch (Exception ex) {
+            log.warn("Chunk 元数据解析失败，忽略本次元数据", ex);
+            return Collections.emptyMap();
+        }
     }
 
     private void fillTokenCountsIfMissing(List<KnowledgeChunkDO> chunks) {

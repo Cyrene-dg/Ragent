@@ -39,11 +39,17 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class MilvusVectorStoreService implements VectorStoreService {
+
+    private static final Pattern METADATA_KEY_PATTERN = Pattern.compile("[A-Za-z][A-Za-z0-9_]{0,63}");
+    private static final Set<String> RESERVED_METADATA_KEYS = Set.of("kb_id", "doc_id", "chunk_index");
 
     private final MilvusClientV2 milvusClient;
     private final KnowledgeBaseMapper kbMapper;
@@ -73,6 +79,7 @@ public class MilvusVectorStoreService implements VectorStoreService {
             metadata.addProperty("kb_id", kbId);
             metadata.addProperty("doc_id", docId);
             metadata.addProperty("chunk_index", chunk.getIndex());
+            appendChunkMetadata(metadata, chunk.getMetadata());
 
             JsonObject row = new JsonObject();
             row.addProperty("doc_id", chunk.getChunkId());
@@ -115,6 +122,7 @@ public class MilvusVectorStoreService implements VectorStoreService {
         metadata.addProperty("kb_id", kbId);
         metadata.addProperty("doc_id", docId);
         metadata.addProperty("chunk_index", chunk.getIndex());
+        appendChunkMetadata(metadata, chunk.getMetadata());
 
         JsonObject row = new JsonObject();
         row.addProperty("doc_id", chunkPk);
@@ -206,6 +214,29 @@ public class MilvusVectorStoreService implements VectorStoreService {
             arr.add(x);
         }
         return arr;
+    }
+
+    /**
+     * Keep the mandatory storage keys authoritative while allowing typed,
+     * scalar chunk metadata to become searchable Milvus JSON fields.
+     */
+    private void appendChunkMetadata(JsonObject target, Map<String, Object> metadata) {
+        if (metadata == null || metadata.isEmpty()) {
+            return;
+        }
+        metadata.forEach((key, value) -> {
+            if (key == null || value == null || RESERVED_METADATA_KEYS.contains(key)
+                    || !METADATA_KEY_PATTERN.matcher(key).matches()) {
+                return;
+            }
+            if (value instanceof Number number) {
+                target.addProperty(key, number);
+            } else if (value instanceof Boolean bool) {
+                target.addProperty(key, bool);
+            } else {
+                target.addProperty(key, String.valueOf(value));
+            }
+        });
     }
 
     private int resolveDimension(KnowledgeBaseDO kbDO) {

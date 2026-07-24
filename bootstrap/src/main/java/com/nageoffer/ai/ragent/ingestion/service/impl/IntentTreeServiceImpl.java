@@ -70,15 +70,21 @@ public class IntentTreeServiceImpl extends ServiceImpl<IntentNodeMapper, IntentN
                 .eq(IntentNodeDO::getDeleted, 0)
                 .orderByAsc(IntentNodeDO::getSortOrder, IntentNodeDO::getId));
 
-        // 先按 parentCode 分组
-        Map<String, List<IntentNodeDO>> parentMap = list.stream()
-                .collect(Collectors.groupingBy(node -> {
-                    String parent = node.getParentCode();
-                    return parent == null ? "ROOT" : parent;
-                }));
+        Map<ScopedIntentKey, IntentNodeDO> nodesByScopedCode = list.stream()
+                .collect(Collectors.toMap(
+                        node -> scopedKey(node.getKbId(), node.getIntentCode()),
+                        node -> node,
+                        (left, right) -> left
+                ));
+        Map<ScopedIntentKey, List<IntentNodeDO>> parentMap = buildChildrenMap(list);
 
-        // 根节点：parentCode 为空
-        List<IntentNodeDO> roots = parentMap.getOrDefault("ROOT", Collections.emptyList());
+        // A parent code is only valid inside the same knowledge-base scope.
+        // Treat data left over from an incomplete legacy import as a root so
+        // it remains visible instead of silently attaching to another KB.
+        List<IntentNodeDO> roots = list.stream()
+                .filter(node -> StrUtil.isBlank(node.getParentCode())
+                        || !nodesByScopedCode.containsKey(scopedKey(node.getKbId(), node.getParentCode())))
+                .toList();
 
         // 递归构建树
         List<IntentNodeTreeVO> tree = new ArrayList<>();
@@ -89,9 +95,10 @@ public class IntentTreeServiceImpl extends ServiceImpl<IntentNodeMapper, IntentN
     }
 
     private IntentNodeTreeVO buildTree(IntentNodeDO current,
-                                       Map<String, List<IntentNodeDO>> parentMap) {
+                                       Map<ScopedIntentKey, List<IntentNodeDO>> parentMap) {
         IntentNodeTreeVO result = BeanUtil.toBean(current, IntentNodeTreeVO.class);
-        List<IntentNodeDO> children = parentMap.getOrDefault(current.getIntentCode(), Collections.emptyList());
+        List<IntentNodeDO> children = parentMap.getOrDefault(
+                scopedKey(current.getKbId(), current.getIntentCode()), Collections.emptyList());
 
         if (!CollectionUtils.isEmpty(children)) {
             List<IntentNodeTreeVO> childVOs = children.stream()
@@ -241,10 +248,10 @@ public class IntentTreeServiceImpl extends ServiceImpl<IntentNodeMapper, IntentN
     public void batchDisableNodes(List<Long> ids) {
         List<IntentNodeDO> targetNodes = listAndValidateTargetNodes(ids);
         List<IntentNodeDO> allActiveNodes = listActiveNodes();
-        Map<String, List<IntentNodeDO>> childrenMap = buildChildrenMap(allActiveNodes);
+        Map<ScopedIntentKey, List<IntentNodeDO>> childrenMap = buildChildrenMap(allActiveNodes);
         Set<Long> targetIdSet = targetNodes.stream().map(IntentNodeDO::getId).collect(Collectors.toSet());
         for (IntentNodeDO targetNode : targetNodes) {
-            List<IntentNodeDO> descendants = collectDescendants(targetNode.getIntentCode(), childrenMap);
+            List<IntentNodeDO> descendants = collectDescendants(targetNode, childrenMap);
             List<IntentNodeDO> enabledButNotSelected = descendants.stream()
                     .filter(item -> Objects.equals(item.getEnabled(), 1) && !targetIdSet.contains(item.getId()))
                     .collect(Collectors.toList());
@@ -272,10 +279,10 @@ public class IntentTreeServiceImpl extends ServiceImpl<IntentNodeMapper, IntentN
     public void batchDeleteNodes(List<Long> ids) {
         List<IntentNodeDO> targetNodes = listAndValidateTargetNodes(ids);
         List<IntentNodeDO> allActiveNodes = listActiveNodes();
-        Map<String, List<IntentNodeDO>> childrenMap = buildChildrenMap(allActiveNodes);
+        Map<ScopedIntentKey, List<IntentNodeDO>> childrenMap = buildChildrenMap(allActiveNodes);
         Set<Long> targetIdSet = targetNodes.stream().map(IntentNodeDO::getId).collect(Collectors.toSet());
         for (IntentNodeDO targetNode : targetNodes) {
-            List<IntentNodeDO> descendants = collectDescendants(targetNode.getIntentCode(), childrenMap);
+            List<IntentNodeDO> descendants = collectDescendants(targetNode, childrenMap);
             List<IntentNodeDO> notSelectedDescendants = descendants.stream()
                     .filter(item -> !targetIdSet.contains(item.getId()))
                     .collect(Collectors.toList());
@@ -429,30 +436,38 @@ public class IntentTreeServiceImpl extends ServiceImpl<IntentNodeMapper, IntentN
                 .eq(IntentNodeDO::getDeleted, 0));
     }
 
-    private Map<String, List<IntentNodeDO>> buildChildrenMap(List<IntentNodeDO> nodes) {
-        return nodes.stream().collect(Collectors.groupingBy(node -> {
-            String parentCode = node.getParentCode();
-            return parentCode == null ? "ROOT" : parentCode;
-        }));
+    private Map<ScopedIntentKey, List<IntentNodeDO>> buildChildrenMap(List<IntentNodeDO> nodes) {
+        return nodes.stream()
+                .filter(node -> StrUtil.isNotBlank(node.getParentCode()))
+                .collect(Collectors.groupingBy(node -> scopedKey(node.getKbId(), node.getParentCode())));
     }
 
-    private List<IntentNodeDO> collectDescendants(String intentCode, Map<String, List<IntentNodeDO>> childrenMap) {
-        if (StrUtil.isBlank(intentCode)) {
+    private List<IntentNodeDO> collectDescendants(IntentNodeDO root,
+                                                   Map<ScopedIntentKey, List<IntentNodeDO>> childrenMap) {
+        if (root == null || StrUtil.isBlank(root.getIntentCode())) {
             return Collections.emptyList();
         }
         List<IntentNodeDO> result = new ArrayList<>();
         Deque<IntentNodeDO> stack = new ArrayDeque<>(
-                childrenMap.getOrDefault(intentCode, Collections.emptyList())
+                childrenMap.getOrDefault(scopedKey(root.getKbId(), root.getIntentCode()), Collections.emptyList())
         );
         while (!stack.isEmpty()) {
             IntentNodeDO current = stack.pop();
             result.add(current);
-            List<IntentNodeDO> children = childrenMap.getOrDefault(current.getIntentCode(), Collections.emptyList());
+            List<IntentNodeDO> children = childrenMap.getOrDefault(
+                    scopedKey(current.getKbId(), current.getIntentCode()), Collections.emptyList());
             for (int i = children.size() - 1; i >= 0; i--) {
                 stack.push(children.get(i));
             }
         }
         return result;
+    }
+
+    private static ScopedIntentKey scopedKey(Long kbId, String intentCode) {
+        return new ScopedIntentKey(kbId, intentCode);
+    }
+
+    private record ScopedIntentKey(Long kbId, String intentCode) {
     }
 
     private String summarizeNodeNames(List<IntentNodeDO> nodes) {

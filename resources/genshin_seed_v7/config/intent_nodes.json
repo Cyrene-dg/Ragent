@@ -1,0 +1,246 @@
+[
+  {
+    "intentCode": "genshin_v7_domain",
+    "name": "原神知识问答",
+    "level": 0,
+    "parentCode": null,
+    "description": "原神官方资料、任务、角色、武器、成就与材料查询",
+    "examples": [
+      "神里绫华有什么技能",
+      "旧日的阴云怎么做"
+    ],
+    "topK": 8,
+    "kind": 0,
+    "sortOrder": 1,
+    "enabled": 1
+  },
+  {
+    "intentCode": "genshin_v7_character",
+    "name": "角色",
+    "level": 1,
+    "parentCode": "genshin_v7_domain",
+    "description": "角色基础资料、技能、命之座和背景故事",
+    "examples": [
+      "神里绫华是什么武器",
+      "琴的命座效果"
+    ],
+    "topK": 8,
+    "kind": 0,
+    "sortOrder": 2,
+    "enabled": 1
+  },
+  {
+    "intentCode": "genshin_v7_character_profile",
+    "name": "基础资料",
+    "level": 2,
+    "parentCode": "genshin_v7_character",
+    "description": "角色等级、稀有度、武器类型、阵营和称号",
+    "examples": [
+      "神里绫华是几星",
+      "神里绫华用什么武器类型"
+    ],
+    "topK": 6,
+    "kind": 0,
+    "sortOrder": 3,
+    "enabled": 1
+  },
+  {
+    "intentCode": "genshin_v7_character_skill",
+    "name": "技能与命座",
+    "level": 2,
+    "parentCode": "genshin_v7_character",
+    "description": "角色普通攻击、元素战技、元素爆发与命之座效果",
+    "examples": [
+      "神里绫华大招是什么",
+      "神里绫华一命效果"
+    ],
+    "topK": 6,
+    "kind": 0,
+    "sortOrder": 4,
+    "enabled": 1
+  },
+  {
+    "intentCode": "genshin_v7_character_story",
+    "name": "背景与故事",
+    "level": 2,
+    "parentCode": "genshin_v7_character",
+    "description": "角色背景、角色故事和设定",
+    "examples": [
+      "神里绫华的背景故事"
+    ],
+    "topK": 6,
+    "kind": 0,
+    "sortOrder": 5,
+    "enabled": 1
+  },
+  {
+    "intentCode": "genshin_v7_weapon",
+    "name": "武器",
+    "level": 1,
+    "parentCode": "genshin_v7_domain",
+    "description": "武器基础属性、被动效果和突破信息",
+    "examples": [
+      "黎明破晓之史的被动",
+      "若水是什么武器"
+    ],
+    "topK": 8,
+    "kind": 0,
+    "sortOrder": 6,
+    "enabled": 1
+  },
+  {
+    "intentCode": "genshin_v7_weapon_detail",
+    "name": "属性与被动",
+    "level": 2,
+    "parentCode": "genshin_v7_weapon",
+    "description": "武器星级、类型、描述、被动与精炼效果",
+    "examples": [
+      "黎明破晓之史 R1 效果"
+    ],
+    "topK": 6,
+    "kind": 0,
+    "sortOrder": 7,
+    "enabled": 1
+  },
+  {
+    "intentCode": "genshin_v7_artifact",
+    "name": "圣遗物",
+    "level": 1,
+    "parentCode": "genshin_v7_domain",
+    "description": "圣遗物套装资料与属性",
+    "examples": [
+      "某套圣遗物有什么效果"
+    ],
+    "topK": 8,
+    "kind": 0,
+    "sortOrder": 8,
+    "enabled": 1
+  },
+  {
+    "intentCode": "genshin_v7_artifact_detail",
+    "name": "套装资料",
+    "level": 2,
+    "parentCode": "genshin_v7_artifact",
+    "description": "圣遗物套装及部位资料",
+    "examples": [
+      "某套圣遗物的套装效果"
+    ],
+    "topK": 6,
+    "kind": 0,
+    "sortOrder": 9,
+    "enabled": 1
+  },
+  {
+    "intentCode": "genshin_v7_quest",
+    "name": "任务与剧情",
+    "level": 1,
+    "parentCode": "genshin_v7_domain",
+    "description": "主线任务、章节、流程与剧情资料",
+    "examples": [
+      "旧日的阴云怎么做",
+      "任务前置是什么"
+    ],
+    "topK": 8,
+    "kind": 0,
+    "sortOrder": 10,
+    "enabled": 1
+  },
+  {
+    "intentCode": "genshin_v7_quest_flow",
+    "name": "任务流程",
+    "level": 2,
+    "parentCode": "genshin_v7_quest",
+    "description": "任务摘要、前置和连续步骤",
+    "examples": [
+      "旧日的阴云下一步做什么"
+    ],
+    "topK": 6,
+    "kind": 0,
+    "sortOrder": 11,
+    "enabled": 1
+  },
+  {
+    "intentCode": "genshin_v7_story",
+    "name": "章节与设定",
+    "level": 2,
+    "parentCode": "genshin_v7_quest",
+    "description": "剧情章节与世界观设定",
+    "examples": [
+      "浪花不再归海是哪一章"
+    ],
+    "topK": 6,
+    "kind": 0,
+    "sortOrder": 12,
+    "enabled": 1
+  },
+  {
+    "intentCode": "genshin_v7_achievement",
+    "name": "成就",
+    "level": 1,
+    "parentCode": "genshin_v7_domain",
+    "description": "成就名称、所属组和达成条件",
+    "examples": [
+      "被遗忘的纸带怎么完成"
+    ],
+    "topK": 8,
+    "kind": 0,
+    "sortOrder": 13,
+    "enabled": 1
+  },
+  {
+    "intentCode": "genshin_v7_achievement_condition",
+    "name": "条件与前置",
+    "level": 2,
+    "parentCode": "genshin_v7_achievement",
+    "description": "成就触发条件、进度和前置",
+    "examples": [
+      "被遗忘的纸带条件"
+    ],
+    "topK": 6,
+    "kind": 0,
+    "sortOrder": 14,
+    "enabled": 1
+  },
+  {
+    "intentCode": "genshin_v7_material",
+    "name": "材料",
+    "level": 1,
+    "parentCode": "genshin_v7_domain",
+    "description": "材料类型、用途和资料",
+    "examples": [
+      "某材料是什么"
+    ],
+    "topK": 8,
+    "kind": 0,
+    "sortOrder": 15,
+    "enabled": 1
+  },
+  {
+    "intentCode": "genshin_v7_material_detail",
+    "name": "材料资料",
+    "level": 2,
+    "parentCode": "genshin_v7_material",
+    "description": "材料名称、类型与用途",
+    "examples": [
+      "某材料有什么用"
+    ],
+    "topK": 6,
+    "kind": 0,
+    "sortOrder": 16,
+    "enabled": 1
+  },
+  {
+    "intentCode": "genshin_v7_lore",
+    "name": "补充设定",
+    "level": 1,
+    "parentCode": "genshin_v7_domain",
+    "description": "补充世界观和设定资料",
+    "examples": [
+      "原神某地区设定"
+    ],
+    "topK": 8,
+    "kind": 0,
+    "sortOrder": 17,
+    "enabled": 1
+  }
+]

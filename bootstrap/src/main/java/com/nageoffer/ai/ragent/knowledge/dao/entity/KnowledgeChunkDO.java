@@ -82,6 +82,14 @@ public class KnowledgeChunkDO {
     private Integer tokenCount;
 
     /**
+     * Chunk 级检索元数据，JSON 字符串。
+     * <p>
+     * 例如 category、entity_type、entity_id、doc_type 与 section_path。
+     * 运行时会同步写入 Milvus JSON metadata 字段，供过滤与放宽策略使用。
+     */
+    private String metadataJson;
+
+    /**
      * 是否启用 0：禁用 1：启用
      */
     private Integer enabled;

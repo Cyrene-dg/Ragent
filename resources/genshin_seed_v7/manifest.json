@@ -1,0 +1,59 @@
+{
+  "generatedAt": "2026-07-23T12:15:55.945480+00:00",
+  "sourceDocsRoot": "G:\\Ragent2026\\ragent\\resources\\genshin_seed_v6\\docs",
+  "sourceVersion": "genshin_seed_v6",
+  "schemaVersion": "v7",
+  "totalDocuments": 6562,
+  "totalChunks": 7742,
+  "semanticIntentNodeCount": 17,
+  "entityCount": 6562,
+  "documentsSplit": 144,
+  "splitDocumentCountByCategory": {
+    "character": 115,
+    "quest": 14,
+    "weapon": 15
+  },
+  "categoryDocumentCount": {
+    "achievement": 900,
+    "artifact": 62,
+    "character": 121,
+    "lore": 4,
+    "material": 1000,
+    "quest": 3831,
+    "story": 386,
+    "weapon": 258
+  },
+  "categoryChunkCount": {
+    "achievement": 900,
+    "artifact": 62,
+    "character": 1247,
+    "lore": 4,
+    "material": 1000,
+    "quest": 3849,
+    "story": 386,
+    "weapon": 294
+  },
+  "docTypeChunkCount": {
+    "achievement_condition": 900,
+    "artifact_set": 62,
+    "character_constellation": 147,
+    "character_profile": 121,
+    "character_skill": 159,
+    "character_story": 820,
+    "lore_entry": 4,
+    "material_information": 1000,
+    "quest_flow": 3849,
+    "story_chapter": 386,
+    "weapon_owner_relation": 12,
+    "weapon_passive": 21,
+    "weapon_profile": 261
+  },
+  "chunkPolicy": {
+    "targetChars": 760,
+    "maxChars": 1100,
+    "minChars": 340,
+    "overlapChars": 80,
+    "notes": "Only oversized semantic sections are split; short documents remain whole."
+  },
+  "nextStep": "Import into a new KB and new indexes only after validation; never overwrite v4/v6."
+}

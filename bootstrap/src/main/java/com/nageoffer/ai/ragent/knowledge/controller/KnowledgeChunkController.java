@@ -34,7 +34,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 /**
  * 知识库 Chunk 管理接口
@@ -62,6 +65,18 @@ public class KnowledgeChunkController {
     public Result<KnowledgeChunkVO> create(@PathVariable("doc-id") String docId,
                                            @RequestBody KnowledgeChunkCreateRequest request) {
         return Results.success(knowledgeChunkService.create(docId, request));
+    }
+
+    /**
+     * 批量创建同一文档的 Chunk。适合离线种子或手工重切后的原子提交；
+     * 默认不向量化，调用方可显式要求在同一批次完成向量写入。
+     */
+    @PostMapping("/knowledge-base/docs/{doc-id}/chunks/batch")
+    public Result<Void> batchCreate(@PathVariable("doc-id") String docId,
+                                    @RequestBody List<KnowledgeChunkCreateRequest> requests,
+                                    @RequestParam(value = "write-vector", defaultValue = "false") boolean writeVector) {
+        knowledgeChunkService.batchCreate(docId, requests, writeVector);
+        return Results.success();
     }
 
     /**

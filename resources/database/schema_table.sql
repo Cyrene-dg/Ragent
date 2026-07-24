@@ -164,6 +164,7 @@ CREATE TABLE `t_knowledge_chunk`
     `content_hash` varchar(64) COLLATE utf8mb4_unicode_ci          DEFAULT NULL COMMENT '内容哈希（用于幂等/去重）',
     `char_count`   int(11) DEFAULT NULL COMMENT '字符数（可用于统计/调参）',
     `token_count`  int(11) DEFAULT NULL COMMENT 'Token数（可选）',
+    `metadata_json` json DEFAULT NULL COMMENT 'Chunk级检索元数据JSON',
     `enabled`      tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否启用 0：禁用 1：启用',
     `created_by`   varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '创建人',
     `updated_by`   varchar(64) COLLATE utf8mb4_unicode_ci          DEFAULT NULL COMMENT '修改人',
