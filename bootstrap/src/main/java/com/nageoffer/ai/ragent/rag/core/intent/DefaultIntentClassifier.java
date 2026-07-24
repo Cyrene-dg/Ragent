@@ -19,7 +19,6 @@ package com.nageoffer.ai.ragent.rag.core.intent;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -207,15 +206,11 @@ public class DefaultIntentClassifier implements IntentClassifier, IntentNodeRegi
             // 降序排序
             scores.sort(Comparator.comparingDouble(NodeScore::getScore).reversed());
 
-            log.info("当前问题：{}\n意图识别树如下所示：{}\n",
-                    question,
-                    JSONUtil.toJsonPrettyStr(
-                            scores.stream().peek(each -> {
-                                IntentNode node = each.getNode();
-                                node.setChildren(null);
-                            }).collect(Collectors.toList())
-                    )
-            );
+            String selectedIntentScores = scores.stream()
+                    .map(each -> "%s=%.3f".formatted(each.getNode().getId(), each.getScore()))
+                    .collect(Collectors.joining(", "));
+            log.info("Intent classification result: question='{}', selectedIntentScores=[{}]",
+                    question, selectedIntentScores);
             return scores;
         } catch (Exception e) {
             log.warn("解析 LLM 响应失败, 原始内容: {}", raw, e);
