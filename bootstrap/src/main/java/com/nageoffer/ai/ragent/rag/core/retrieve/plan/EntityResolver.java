@@ -36,6 +36,15 @@ public class EntityResolver {
 
     private final EntityCatalogService entityCatalogService;
 
+    /**
+     * Resolves an entity before intent classification.  The result is only a
+     * hint at this stage; route compatibility is checked later when metadata
+     * filters are assembled.
+     */
+    public EntityResolution resolveAny(String question) {
+        return resolve(question, List.of());
+    }
+
     public EntityResolution resolve(String question, Collection<String> allowedCategories) {
         String normalizedQuestion = normalize(question);
         if (normalizedQuestion.isBlank()) {
@@ -83,7 +92,8 @@ public class EntityResolver {
 
         Candidate candidate = strongestCandidates.get(0);
         EntityCatalogService.EntityCatalogEntry entry = candidate.entry();
-        return EntityResolution.matched(candidate.matchedAlias(), entry.entityType(), entry.entityId(), entry.entityName());
+        return EntityResolution.matched(candidate.matchedAlias(), entry.entityType(), entry.entityId(), entry.entityName(),
+                entry.category());
     }
 
     private static String normalize(String value) {

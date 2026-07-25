@@ -44,12 +44,17 @@ public class RetrievalPlanService {
 
     @RagTraceNode(name = "retrieval-plan", type = "RETRIEVE")
     public RetrievalPlan buildPlan(String question, List<NodeScore> kbIntents) {
-        if (!properties.isEnabled() || kbIntents == null || kbIntents.isEmpty()) {
+        return buildPlan(question, kbIntents, entityResolver.resolveAny(question));
+    }
+
+    @RagTraceNode(name = "retrieval-plan", type = "RETRIEVE")
+    public RetrievalPlan buildPlan(String question, List<NodeScore> kbIntents, EntityResolution entityResolution) {
+        if (!properties.isEnabled()) {
             return emptyPlan(question);
         }
 
         Map<String, NodeScore> strongestIntentByCode = new LinkedHashMap<>();
-        for (NodeScore nodeScore : kbIntents) {
+        for (NodeScore nodeScore : kbIntents == null ? List.<NodeScore>of() : kbIntents) {
             IntentNode node = nodeScore == null ? null : nodeScore.getNode();
             if (node == null || node.getId() == null) {
                 continue;
@@ -63,16 +68,36 @@ public class RetrievalPlanService {
             IntentNode node = nodeScore.getNode();
             intentRouteRuleService.findByIntentCode(node.getId()).ifPresent(rule -> {
                 Map<String, Object> routeFilters = rule.metadataFilters();
-                EntityResolution entity = entityResolver.resolve(question, categoriesOf(routeFilters));
+                EntityResolution compatibleEntity = isCompatible(entityResolution, routeFilters)
+                        ? entityResolution
+                        : entityResolver.resolve(question, categoriesOf(routeFilters));
                 intentPlans.add(new IntentRetrievalPlan(
                         node.getId(),
                         node.getName(),
                         nodeScore.getScore(),
+                        node.getKbId(),
+                        node.getCollectionName(),
                         routeFilters,
-                        entity,
-                        buildFilterLevels(routeFilters, entity)
+                        compatibleEntity,
+                        buildFilterLevels(routeFilters, compatibleEntity)
                 ));
             });
+        }
+        if (intentPlans.isEmpty() && entityResolution != null && entityResolution.isMatched()
+                && entityResolution.category() != null && !entityResolution.category().isBlank()
+                && !properties.getEntityFallbackKbId().isBlank()
+                && !properties.getEntityFallbackCollectionName().isBlank()) {
+            Map<String, Object> routeFilters = Map.of("category", entityResolution.category());
+            intentPlans.add(new IntentRetrievalPlan(
+                    "metadata_entity_fallback",
+                    "实体兜底检索",
+                    0.75D,
+                    properties.getEntityFallbackKbId(),
+                    properties.getEntityFallbackCollectionName(),
+                    routeFilters,
+                    entityResolution,
+                    buildEntityFallbackLevels(routeFilters, entityResolution)
+            ));
         }
         return new RetrievalPlan(question, properties.getTargetCandidateCount(), properties.getMaxCandidatePool(), intentPlans);
     }
@@ -109,6 +134,13 @@ public class RetrievalPlanService {
             levels.add(new RetrievalFilterLevel(index + 1, levelName(index, filters, entityResolution), filters));
         }
         return levels;
+    }
+
+    private List<RetrievalFilterLevel> buildEntityFallbackLevels(Map<String, Object> routeFilters,
+                                                                  EntityResolution entityResolution) {
+        Map<String, Object> filters = entityFilters(entityResolution);
+        filters.putAll(routeFilters);
+        return List.of(new RetrievalFilterLevel(1, "entity-category-fallback", filters));
     }
 
     private static Map<String, Object> entityFilters(EntityResolution entityResolution) {
@@ -153,5 +185,13 @@ public class RetrievalPlanService {
             return categories;
         }
         return category == null ? Set.of() : Set.of(String.valueOf(category));
+    }
+
+    private static boolean isCompatible(EntityResolution entityResolution, Map<String, Object> routeFilters) {
+        if (entityResolution == null || !entityResolution.isMatched()) {
+            return false;
+        }
+        String entityCategory = entityResolution.category();
+        return entityCategory != null && categoriesOf(routeFilters).contains(entityCategory);
     }
 }

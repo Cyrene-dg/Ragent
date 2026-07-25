@@ -26,6 +26,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.nageoffer.ai.ragent.infra.util.LLMResponseCleaner;
 import com.nageoffer.ai.ragent.rag.config.IntentPreFilterProperties;
+import com.nageoffer.ai.ragent.rag.core.retrieve.plan.EntityResolution;
 import com.nageoffer.ai.ragent.rag.dao.entity.IntentNodeDO;
 import com.nageoffer.ai.ragent.rag.dao.mapper.IntentNodeMapper;
 import com.nageoffer.ai.ragent.framework.convention.ChatMessage;
@@ -138,6 +139,11 @@ public class DefaultIntentClassifier implements IntentClassifier, IntentNodeRegi
     //它不是用传统分类模型硬编码做意图识别，而是把“意图树 + 当前问题”交给大模型，让大模型返回候选意图及分数，再由程序做结构化解析和校验。
     @Override
     public List<NodeScore> classifyTargets(String question) {
+        return classifyTargets(question, EntityResolution.notFound());
+    }
+
+    @Override
+    public List<NodeScore> classifyTargets(String question, EntityResolution entityHint) {
         // 每次都从Redis读取最新数据
         IntentTreeData data = loadIntentTreeData();
 
@@ -154,7 +160,7 @@ public class DefaultIntentClassifier implements IntentClassifier, IntentNodeRegi
                 totalLeafCount,
                 candidateLeafNodes.size(),
                 intentPreFilterProperties.getCandidateLimit());
-        String systemPrompt = buildPrompt(candidateLeafNodes);
+        String systemPrompt = buildPrompt(candidateLeafNodes, entityHint);
         ChatRequest request = ChatRequest.builder()
                 .messages(List.of(
                         ChatMessage.system(systemPrompt),
@@ -238,7 +244,7 @@ public class DefaultIntentClassifier implements IntentClassifier, IntentNodeRegi
      * - 特别强调：如果问题里只提到 "OA系统"，不要选 "保险系统" 的分类
      * - 如果存在 MCP 类型节点，使用增强版 Prompt 并添加 type/toolId 标识
      */
-    private String buildPrompt(List<IntentNode> leafNodes) {
+    private String buildPrompt(List<IntentNode> leafNodes, EntityResolution entityHint) {
         StringBuilder sb = new StringBuilder();
 
         for (IntentNode node : leafNodes) {
@@ -266,10 +272,20 @@ public class DefaultIntentClassifier implements IntentClassifier, IntentNodeRegi
             sb.append("\n");
         }
 
-        return promptTemplateLoader.render(
+        String prompt = promptTemplateLoader.render(
                 INTENT_CLASSIFIER_PROMPT_PATH,
                 Map.of("intent_list", sb.toString())
         );
+        if (!entityHint.isMatched()) {
+            return prompt;
+        }
+        return prompt + "\n\n# Catalog entity hint\n"
+                + "A deterministic local catalog matched one concrete entity. Treat its type as a strong hint, "
+                + "but still classify the user intent from the question semantics. The entity name is not required "
+                + "to appear in a leaf example.\n"
+                + "- entity_name=" + entityHint.entityName() + "\n"
+                + "- entity_type=" + entityHint.entityType() + "\n"
+                + "- entity_category=" + entityHint.category() + "\n";
     }
 
     private List<IntentNode> loadIntentTreeFromDB() {

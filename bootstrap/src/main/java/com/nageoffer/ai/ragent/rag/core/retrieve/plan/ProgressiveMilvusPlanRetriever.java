@@ -54,7 +54,7 @@ public class ProgressiveMilvusPlanRetriever {
                                                RetrievalPlan plan,
                                                List<NodeScore> kbIntents,
                                                Map<String, String> embeddingModelByCollection) {
-        if (plan == null || plan.isEmpty() || CollUtil.isEmpty(kbIntents) || StrUtil.isBlank(question)) {
+        if (plan == null || plan.isEmpty() || StrUtil.isBlank(question)) {
             return ProgressiveRetrievalResult.empty();
         }
 
@@ -74,14 +74,11 @@ public class ProgressiveMilvusPlanRetriever {
             if (candidates.size() >= maxCandidatePool) {
                 break;
             }
-            NodeScore nodeScore = nodeByIntentCode.get(intentPlan.intentCode());
-            IntentNode node = nodeScore == null ? null : nodeScore.getNode();
-            if (node == null || StrUtil.isBlank(node.getCollectionName())) {
+            String collectionName = collectionNameOf(intentPlan, nodeByIntentCode);
+            if (StrUtil.isBlank(collectionName)) {
                 log.warn("Skip metadata plan because its intent has no collection: intentCode={}", intentPlan.intentCode());
                 continue;
             }
-
-            String collectionName = node.getCollectionName().trim();
             String embeddingModel = embeddingModelByCollection == null
                     ? null
                     : embeddingModelByCollection.get(collectionName);
@@ -135,6 +132,9 @@ public class ProgressiveMilvusPlanRetriever {
                             levelChunks == null ? 0 : levelChunks.size(),
                             addedByLevel,
                             candidates.size());
+                    if (ProgressivePlanStopPolicy.shouldStopAfterLevel(level, levelChunks)) {
+                        break;
+                    }
                 } catch (Exception ex) {
                     failedSearches++;
                     executions.add(new LevelExecution(
@@ -163,6 +163,9 @@ public class ProgressiveMilvusPlanRetriever {
 
     private Map<String, NodeScore> strongestNodeByIntentCode(List<NodeScore> kbIntents) {
         Map<String, NodeScore> result = new HashMap<>();
+        if (CollUtil.isEmpty(kbIntents)) {
+            return result;
+        }
         for (NodeScore nodeScore : kbIntents) {
             if (nodeScore == null || nodeScore.getNode() == null || StrUtil.isBlank(nodeScore.getNode().getId())) {
                 continue;
@@ -171,6 +174,15 @@ public class ProgressiveMilvusPlanRetriever {
                     (existing, candidate) -> candidate.getScore() > existing.getScore() ? candidate : existing);
         }
         return result;
+    }
+
+    private String collectionNameOf(IntentRetrievalPlan intentPlan, Map<String, NodeScore> nodeByIntentCode) {
+        if (StrUtil.isNotBlank(intentPlan.collectionName())) {
+            return intentPlan.collectionName().trim();
+        }
+        NodeScore nodeScore = nodeByIntentCode.get(intentPlan.intentCode());
+        IntentNode node = nodeScore == null ? null : nodeScore.getNode();
+        return node == null ? null : StrUtil.trim(node.getCollectionName());
     }
 
     private float[] embedAndNormalize(String question, String embeddingModel) {

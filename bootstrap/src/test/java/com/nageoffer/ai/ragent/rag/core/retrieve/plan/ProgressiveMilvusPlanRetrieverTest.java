@@ -80,7 +80,7 @@ class ProgressiveMilvusPlanRetrieverTest {
     }
 
     @Test
-    void shouldKeepStrictResultsAndRelaxOnlyUntilTargetIsFilled() {
+    void shouldStopAfterAnyEntityScopedHitInsteadOfRelaxingAcrossEntities() {
         List<RetrieveRequest> requests = new ArrayList<>();
         when(retrieverService.retrieveByVector(any(float[].class), any(RetrieveRequest.class))).thenAnswer(invocation -> {
             RetrieveRequest request = invocation.getArgument(1);
@@ -98,11 +98,32 @@ class ProgressiveMilvusPlanRetrieverTest {
                 Map.of("genshinroutingv7", "embedding-v7")
         );
 
-        assertEquals(20, result.chunks().size());
+        assertEquals(5, result.chunks().size());
+        assertEquals(1, requests.size());
+        assertEquals(strictFilters(), requests.get(0).getMetadataFilters());
+        assertEquals(1, result.executions().size());
+    }
+
+    @Test
+    void shouldRelaxWithinTheSameEntityWhenStrictScopeReturnsNoResult() {
+        List<RetrieveRequest> requests = new ArrayList<>();
+        when(retrieverService.retrieveByVector(any(float[].class), any(RetrieveRequest.class))).thenAnswer(invocation -> {
+            RetrieveRequest request = invocation.getArgument(1);
+            requests.add(request);
+            return request.getMetadataFilters().containsKey("doc_type") ? List.of() : chunks("entity-", 1, 2);
+        });
+
+        ProgressiveRetrievalResult result = progressiveRetriever.retrieve(
+                "神里绫华元素战技",
+                singlePlan("character_skill", strictFilters(), categoryFilters()),
+                List.of(nodeScore("character_skill")),
+                Map.of("genshinroutingv7", "embedding-v7")
+        );
+
+        assertEquals(2, result.chunks().size());
         assertEquals(2, requests.size());
         assertEquals(strictFilters(), requests.get(0).getMetadataFilters());
-        assertEquals(categoryFilters(), requests.get(1).getMetadataFilters());
-        assertEquals(2, result.executions().size());
+        assertEquals(entityCategoryFilters(), requests.get(1).getMetadataFilters());
     }
 
     @Test
@@ -140,6 +161,28 @@ class ProgressiveMilvusPlanRetrieverTest {
         verify(embeddingService, times(1)).embed(plan.question(), "embedding-v7");
     }
 
+    @Test
+    void shouldExecuteEntityFallbackPlanWithoutAnIntentNode() {
+        when(retrieverService.retrieveByVector(any(float[].class), any(RetrieveRequest.class)))
+                .thenReturn(chunks("weapon-", 1, 2));
+        RetrievalPlan plan = new RetrievalPlan("狼的末路被动", 20, 40, List.of(new IntentRetrievalPlan(
+                "metadata_entity_fallback", "实体兜底检索", 0.75D,
+                "2080272025011851264", "genshinroutingv7",
+                Map.of("category", "weapon"),
+                EntityResolution.matched("狼的末路", "weapon", "12502", "狼的末路", "weapon"),
+                List.of(new RetrievalFilterLevel(1, "entity-category-fallback",
+                        Map.of("entity_type", "weapon", "entity_id", "12502", "category", "weapon")))
+        )));
+
+        ProgressiveRetrievalResult result = progressiveRetriever.retrieve(
+                plan.question(), plan, List.of(), Map.of("genshinroutingv7", "embedding-v7"));
+
+        assertEquals(2, result.chunks().size());
+        verify(retrieverService).retrieveByVector(any(float[].class), org.mockito.ArgumentMatchers.argThat(request ->
+                "genshinroutingv7".equals(request.getCollectionName())
+                        && "12502".equals(request.getMetadataFilters().get("entity_id"))));
+    }
+
     private RetrievalPlan singlePlan(String intentCode,
                                      Map<String, Object> strictFilters,
                                      Map<String, Object> categoryOnlyFilters) {
@@ -155,8 +198,9 @@ class ProgressiveMilvusPlanRetrieverTest {
                         EntityResolution.matched("神里绫华", "character", "10000002", "神里绫华"),
                         List.of(
                                 new RetrievalFilterLevel(1, "entity-category-doc-type", strictFilters),
-                                new RetrievalFilterLevel(2, "category", categoryOnlyFilters),
-                                new RetrievalFilterLevel(3, "v7-global", Map.of())
+                                new RetrievalFilterLevel(2, "entity-category", entityCategoryFilters()),
+                                new RetrievalFilterLevel(3, "category", categoryOnlyFilters),
+                                new RetrievalFilterLevel(4, "v7-global", Map.of())
                         )
                 ))
         );
@@ -194,6 +238,10 @@ class ProgressiveMilvusPlanRetrieverTest {
 
     private Map<String, Object> categoryFilters() {
         return Map.of("category", "character");
+    }
+
+    private Map<String, Object> entityCategoryFilters() {
+        return Map.of("entity_type", "character", "entity_id", "10000002", "category", "character");
     }
 
     private List<RetrievedChunk> chunks(String prefix, int start, int count) {

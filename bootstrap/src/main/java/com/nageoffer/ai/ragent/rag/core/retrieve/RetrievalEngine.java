@@ -149,7 +149,8 @@ public class RetrievalEngine {
 
         // Phase 1 records the decision only.  Existing search channels still
         // receive their original request and therefore preserve current recall behavior.
-        RetrievalPlan retrievalPlan = retrievalPlanService.buildPlan(intent.subQuestion(), kbIntents);
+        RetrievalPlan retrievalPlan = retrievalPlanService.buildPlan(
+                intent.subQuestion(), kbIntents, intent.entityResolution());
         if (!retrievalPlan.isEmpty()) {
             log.info("Metadata retrieval plan: question='{}', targetCandidateCount={}, maxCandidatePool={}, plans={}",
                     intent.subQuestion(),

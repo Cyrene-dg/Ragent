@@ -20,6 +20,7 @@ package com.nageoffer.ai.ragent.rag.dto;
 import java.util.List;
 
 import com.nageoffer.ai.ragent.rag.core.intent.NodeScore;
+import com.nageoffer.ai.ragent.rag.core.retrieve.plan.EntityResolution;
 
 /**
  * 子问题与其意图候选
@@ -27,5 +28,9 @@ import com.nageoffer.ai.ragent.rag.core.intent.NodeScore;
  * @param subQuestion 子问题文本
  * @param nodeScores  子问题的意图候选
  */
-public record SubQuestionIntent(String subQuestion, List<NodeScore> nodeScores) {
+public record SubQuestionIntent(String subQuestion, List<NodeScore> nodeScores, EntityResolution entityResolution) {
+
+    public SubQuestionIntent(String subQuestion, List<NodeScore> nodeScores) {
+        this(subQuestion, nodeScores, EntityResolution.notFound());
+    }
 }

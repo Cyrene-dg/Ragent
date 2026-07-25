@@ -121,6 +121,23 @@ class RetrievalPlanServiceTest {
         assertEquals("11501", plan.intentPlans().get(1).entityResolution().entityId());
     }
 
+    @Test
+    void createsEntityFallbackPlanWhenNoIntentWasReturned() {
+        EntityResolution weapon = EntityResolution.matched("狼的末路", "weapon", "12502", "狼的末路", "weapon");
+
+        RetrievalPlan plan = retrievalPlanService.buildPlan("狼的末路被动效果", List.of(), weapon);
+
+        assertEquals(1, plan.intentPlans().size());
+        IntentRetrievalPlan fallback = plan.intentPlans().get(0);
+        assertEquals("metadata_entity_fallback", fallback.intentCode());
+        assertEquals("2080272025011851264", fallback.kbId());
+        assertEquals("genshinroutingv7", fallback.collectionName());
+        assertEquals(1, fallback.filterLevels().size());
+        assertEquals("entity-category-fallback", fallback.filterLevels().get(0).name());
+        assertEquals("weapon", fallback.filterLevels().get(0).metadataFilters().get("category"));
+        assertEquals("12502", fallback.filterLevels().get(0).metadataFilters().get("entity_id"));
+    }
+
     private NodeScore score(String intentCode) {
         return NodeScore.builder()
                 .node(IntentNode.builder().id(intentCode).name(intentCode).build())

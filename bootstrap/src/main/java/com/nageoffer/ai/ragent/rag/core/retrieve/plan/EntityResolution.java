@@ -29,20 +29,26 @@ public record EntityResolution(
         String entityType,
         String entityId,
         String entityName,
+        String category,
         List<String> candidateEntityIds
 ) {
 
     public static EntityResolution notFound() {
-        return new EntityResolution(EntityResolutionStatus.NOT_FOUND, null, null, null, null, List.of());
+        return new EntityResolution(EntityResolutionStatus.NOT_FOUND, null, null, null, null, null, List.of());
     }
 
     public static EntityResolution ambiguous(String matchedText, List<String> candidateEntityIds) {
-        return new EntityResolution(EntityResolutionStatus.AMBIGUOUS, matchedText, null, null, null,
+        return new EntityResolution(EntityResolutionStatus.AMBIGUOUS, matchedText, null, null, null, null,
                 List.copyOf(candidateEntityIds));
     }
 
     public static EntityResolution matched(String matchedText, String entityType, String entityId, String entityName) {
-        return new EntityResolution(EntityResolutionStatus.MATCHED, matchedText, entityType, entityId, entityName,
+        return matched(matchedText, entityType, entityId, entityName, null);
+    }
+
+    public static EntityResolution matched(String matchedText, String entityType, String entityId, String entityName,
+                                           String category) {
+        return new EntityResolution(EntityResolutionStatus.MATCHED, matchedText, entityType, entityId, entityName, category,
                 List.of(entityId));
     }
 

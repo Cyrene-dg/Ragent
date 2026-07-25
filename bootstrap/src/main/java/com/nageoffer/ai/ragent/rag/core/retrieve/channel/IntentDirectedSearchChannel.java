@@ -36,6 +36,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -82,6 +83,12 @@ public class IntentDirectedSearchChannel implements SearchChannel {
         if (!properties.getChannels().getIntentDirected().isEnabled()) {
             return false;
         }
+        if (context == null) {
+            return false;
+        }
+        if (hasExecutableMetadataPlan(context)) {
+            return true;
+        }
         if (CollUtil.isEmpty(context.getIntents())) {
             return false;
         }
@@ -94,7 +101,7 @@ public class IntentDirectedSearchChannel implements SearchChannel {
         long startTime = System.currentTimeMillis();
         try {
             List<NodeScore> kbIntents = extractKbIntents(context);
-            if (CollUtil.isEmpty(kbIntents)) {
+            if (CollUtil.isEmpty(kbIntents) && !hasExecutableMetadataPlan(context)) {
                 return SearchChannelResult.builder()
                         .channelType(SearchChannelType.INTENT_DIRECTED)
                         .channelName(getName())
@@ -104,13 +111,16 @@ public class IntentDirectedSearchChannel implements SearchChannel {
                         .build();
             }
 
-            Map<String, String> embeddingModelByCollection = loadEmbeddingModelMap(kbIntents);
+            Map<String, String> embeddingModelByCollection = loadEmbeddingModelMap(kbIntents, context.getRetrievalPlan());
             List<RetrievedChunk> allChunks = retrieveByPlanOrLegacy(context, kbIntents, embeddingModelByCollection);
 
             double confidence = kbIntents.stream()
                     .mapToDouble(NodeScore::getScore)
                     .max()
-                    .orElse(0.0);
+                    .orElseGet(() -> context.getRetrievalPlan() == null ? 0.0 : context.getRetrievalPlan().intentPlans().stream()
+                            .mapToDouble(IntentRetrievalPlan::intentScore)
+                            .max()
+                            .orElse(0.0));
 
             long latency = System.currentTimeMillis() - startTime;
             log.info("意图定向检索完成，检索到 {} 个 Chunk，置信度：{}，耗时 {}ms",
@@ -209,13 +219,20 @@ public class IntentDirectedSearchChannel implements SearchChannel {
     /**
      * 将意图命中的 collection 映射到对应知识库绑定的 embedding 模型。
      */
-    private Map<String, String> loadEmbeddingModelMap(List<NodeScore> kbIntents) {
-        List<String> collections = kbIntents.stream()
+    private Map<String, String> loadEmbeddingModelMap(List<NodeScore> kbIntents, RetrievalPlan retrievalPlan) {
+        Set<String> collections = new LinkedHashSet<>(kbIntents.stream()
                 .map(NodeScore::getNode)
                 .filter(node -> node != null && node.getCollectionName() != null && !node.getCollectionName().isBlank())
                 .map(node -> node.getCollectionName().trim())
                 .distinct()
-                .toList();
+                .toList());
+        if (retrievalPlan != null) {
+            retrievalPlan.intentPlans().stream()
+                    .map(IntentRetrievalPlan::collectionName)
+                    .filter(collection -> collection != null && !collection.isBlank())
+                    .map(String::trim)
+                    .forEach(collections::add);
+        }
         if (collections.isEmpty()) {
             return Map.of();
         }
@@ -234,5 +251,12 @@ public class IntentDirectedSearchChannel implements SearchChannel {
             }
         }
         return mapping;
+    }
+
+    private boolean hasExecutableMetadataPlan(SearchContext context) {
+        return metadataRetrievalProperties.isEnabled()
+                && metadataRetrievalProperties.isExecutionEnabled()
+                && context.getRetrievalPlan() != null
+                && !context.getRetrievalPlan().isEmpty();
     }
 }

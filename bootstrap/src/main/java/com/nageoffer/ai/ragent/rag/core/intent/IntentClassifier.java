@@ -17,6 +17,8 @@
 
 package com.nageoffer.ai.ragent.rag.core.intent;
 
+import com.nageoffer.ai.ragent.rag.core.retrieve.plan.EntityResolution;
+
 import java.util.List;
 
 /**
@@ -37,6 +39,14 @@ public interface IntentClassifier {
      * @return 按 score 从高到低排序的节点打分列表
      */
     List<NodeScore> classifyTargets(String question);
+
+    /**
+     * Classifies a question with an optional deterministic catalog hint.  The
+     * default keeps legacy classifiers source-compatible.
+     */
+    default List<NodeScore> classifyTargets(String question, EntityResolution entityHint) {
+        return classifyTargets(question);
+    }
 
     /**
      * 取前 topN 个且 score >= minScore 的分类

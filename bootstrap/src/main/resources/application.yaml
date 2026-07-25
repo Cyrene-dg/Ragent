@@ -134,6 +134,8 @@ rag:
     execution-enabled: true
     intent-routes-location: file:resources/genshin_seed_v7/config/intent_routes.json
     entity-catalog-location: file:resources/genshin_seed_v7/config/entity_catalog.jsonl
+    entity-fallback-kb-id: 2080272025011851264
+    entity-fallback-collection-name: genshinroutingv7
     target-candidate-count: 20
     max-candidate-pool: 40
     # Only activates after cross-channel de-duplication exceeds this safety ceiling.

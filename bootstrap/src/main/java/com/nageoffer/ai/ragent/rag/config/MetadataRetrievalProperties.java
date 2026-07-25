@@ -41,6 +41,12 @@ public class MetadataRetrievalProperties {
     /** Canonical entities and aliases derived from the v7 chunk artifacts. */
     private String entityCatalogLocation = "file:resources/genshin_seed_v7/config/entity_catalog.jsonl";
 
+    /** Search scope used only when a v7 catalog entity is matched but no leaf intent is returned. */
+    private String entityFallbackKbId = "2080272025011851264";
+
+    /** Milvus collection paired with {@link #entityFallbackKbId}. */
+    private String entityFallbackCollectionName = "genshinroutingv7";
+
     /** Desired unique candidate count before a later retrieval phase stops relaxing filters. */
     private int targetCandidateCount = 20;
 

@@ -65,7 +65,7 @@ class ProgressiveKeywordEsPlanRetrieverTest {
     }
 
     @Test
-    void shouldKeepStrictResultsAndRelaxUntilTargetIsFilled() {
+    void shouldStopAfterAnyEntityScopedHitInsteadOfRelaxingAcrossEntities() {
         when(gateway.search(anyString(), anyInt(), anySet(), anyMap())).thenAnswer(invocation -> {
             Map<String, Object> filters = invocation.getArgument(3);
             return filters.containsKey("entity_id") ? chunks("chunk-", 1, 5) : chunks("chunk-", 6, 15);
@@ -73,10 +73,24 @@ class ProgressiveKeywordEsPlanRetrieverTest {
 
         var result = progressiveRetriever.retrieve("神里绫华元素战技", plan(), List.of(nodeScore()));
 
-        assertEquals(20, result.chunks().size());
+        assertEquals(5, result.chunks().size());
+        assertEquals(1, result.executions().size());
+        assertEquals(strictFilters(), result.executions().get(0).metadataFilters());
+    }
+
+    @Test
+    void shouldRelaxWithinTheSameEntityWhenStrictScopeReturnsNoResult() {
+        when(gateway.search(anyString(), anyInt(), anySet(), anyMap())).thenAnswer(invocation -> {
+            Map<String, Object> filters = invocation.getArgument(3);
+            return filters.containsKey("doc_type") ? List.of() : chunks("entity-", 1, 2);
+        });
+
+        var result = progressiveRetriever.retrieve("神里绫华元素战技", plan(), List.of(nodeScore()));
+
+        assertEquals(2, result.chunks().size());
         assertEquals(2, result.executions().size());
         assertEquals(strictFilters(), result.executions().get(0).metadataFilters());
-        assertEquals(Map.of("category", "character"), result.executions().get(1).metadataFilters());
+        assertEquals(entityCategoryFilters(), result.executions().get(1).metadataFilters());
     }
 
     @Test
@@ -86,8 +100,27 @@ class ProgressiveKeywordEsPlanRetrieverTest {
 
         progressiveRetriever.retrieve("神里绫华元素战技", plan(), List.of(nodeScore()));
 
-        verify(gateway, times(3)).search(anyString(), anyInt(), kbIdsCaptor.capture(), anyMap());
+        verify(gateway, times(4)).search(anyString(), anyInt(), kbIdsCaptor.capture(), anyMap());
         assertTrue(kbIdsCaptor.getAllValues().stream().allMatch(Set.of("2080272025011851264")::equals));
+    }
+
+    @Test
+    void shouldExecuteEntityFallbackPlanWithoutAnIntentNode() {
+        when(gateway.search(anyString(), anyInt(), anySet(), anyMap())).thenReturn(chunks("weapon-", 1, 2));
+        RetrievalPlan plan = new RetrievalPlan("狼的末路被动", 20, 40, List.of(new IntentRetrievalPlan(
+                "metadata_entity_fallback", "实体兜底检索", 0.75D,
+                "2080272025011851264", "genshinroutingv7",
+                Map.of("category", "weapon"),
+                EntityResolution.matched("狼的末路", "weapon", "12502", "狼的末路", "weapon"),
+                List.of(new RetrievalFilterLevel(1, "entity-category-fallback",
+                        Map.of("entity_type", "weapon", "entity_id", "12502", "category", "weapon")))
+        )));
+
+        var result = progressiveRetriever.retrieve(plan.question(), plan, List.of());
+
+        assertEquals(2, result.chunks().size());
+        verify(gateway).search("狼的末路被动", 20, Set.of("2080272025011851264"),
+                Map.of("entity_type", "weapon", "entity_id", "12502", "category", "weapon"));
     }
 
     private RetrievalPlan plan() {
@@ -96,8 +129,9 @@ class ProgressiveKeywordEsPlanRetrieverTest {
                 Map.of("category", "character"), EntityResolution.matched("神里绫华", "character", "10000002", "神里绫华"),
                 List.of(
                         new RetrievalFilterLevel(1, "entity-category-doc-type", strictFilters()),
-                        new RetrievalFilterLevel(2, "category", Map.of("category", "character")),
-                        new RetrievalFilterLevel(3, "v7-global", Map.of())
+                        new RetrievalFilterLevel(2, "entity-category", entityCategoryFilters()),
+                        new RetrievalFilterLevel(3, "category", Map.of("category", "character")),
+                        new RetrievalFilterLevel(4, "v7-global", Map.of())
                 )
         )));
     }
@@ -110,6 +144,10 @@ class ProgressiveKeywordEsPlanRetrieverTest {
     private Map<String, Object> strictFilters() {
         return Map.of("category", "character", "doc_type", List.of("character_skill", "character_constellation"),
                 "entity_type", "character", "entity_id", "10000002");
+    }
+
+    private Map<String, Object> entityCategoryFilters() {
+        return Map.of("entity_type", "character", "entity_id", "10000002", "category", "character");
     }
 
     private List<RetrievedChunk> chunks(String prefix, int start, int count) {

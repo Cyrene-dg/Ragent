@@ -21,9 +21,21 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /** One ordered metadata-filter scope in a progressive retrieval plan. */
-public record RetrievalFilterLevel(int order, String name, Map<String, Object> metadataFilters) {
+public record RetrievalFilterLevel(int order, String name, Map<String, Object> metadataFilters,
+                                   StopCondition stopCondition) {
+
+    public enum StopCondition {
+        TARGET_REACHED,
+        ANY_HIT
+    }
 
     public RetrievalFilterLevel {
         metadataFilters = Map.copyOf(new LinkedHashMap<>(metadataFilters));
+        stopCondition = stopCondition == null ? StopCondition.TARGET_REACHED : stopCondition;
+    }
+
+    public RetrievalFilterLevel(int order, String name, Map<String, Object> metadataFilters) {
+        this(order, name, metadataFilters,
+                metadataFilters.containsKey("entity_id") ? StopCondition.ANY_HIT : StopCondition.TARGET_REACHED);
     }
 }

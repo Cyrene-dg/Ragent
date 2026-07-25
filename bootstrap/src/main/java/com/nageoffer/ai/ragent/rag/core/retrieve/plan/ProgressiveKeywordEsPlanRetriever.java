@@ -51,7 +51,7 @@ public class ProgressiveKeywordEsPlanRetriever {
     public ProgressiveKeywordEsResult retrieve(String question,
                                                RetrievalPlan plan,
                                                List<NodeScore> kbIntents) {
-        if (plan == null || plan.isEmpty() || CollUtil.isEmpty(kbIntents) || StrUtil.isBlank(question)) {
+        if (plan == null || plan.isEmpty() || StrUtil.isBlank(question)) {
             return ProgressiveKeywordEsResult.empty();
         }
 
@@ -70,15 +70,14 @@ public class ProgressiveKeywordEsPlanRetriever {
             if (candidates.size() >= maxCandidatePool) {
                 break;
             }
-            NodeScore nodeScore = nodeByIntentCode.get(intentPlan.intentCode());
-            IntentNode node = nodeScore == null ? null : nodeScore.getNode();
-            if (node == null || StrUtil.isBlank(node.getKbId())) {
+            String kbId = kbIdOf(intentPlan, nodeByIntentCode);
+            if (StrUtil.isBlank(kbId)) {
                 log.warn("Skip ES metadata plan because its intent has no kbId: intentCode={}", intentPlan.intentCode());
                 continue;
             }
 
             int candidateCountBeforeIntent = candidates.size();
-            Set<String> kbIds = Set.of(node.getKbId().trim());
+            Set<String> kbIds = Set.of(kbId);
             for (RetrievalFilterLevel level : intentPlan.filterLevels()) {
                 if (candidates.size() >= maxCandidatePool) {
                     break;
@@ -104,6 +103,9 @@ public class ProgressiveKeywordEsPlanRetriever {
                     log.info("Metadata ES level finished: intentCode={}, level={}, filters={}, returned={}, uniqueAdded={}, pooled={}",
                             intentPlan.intentCode(), level.name(), level.metadataFilters(),
                             levelChunks == null ? 0 : levelChunks.size(), addedByLevel, candidates.size());
+                    if (ProgressivePlanStopPolicy.shouldStopAfterLevel(level, levelChunks)) {
+                        break;
+                    }
                 } catch (Exception ex) {
                     failedSearches++;
                     executions.add(new LevelExecution(intentPlan.intentCode(), level.order(), level.name(),
@@ -120,6 +122,9 @@ public class ProgressiveKeywordEsPlanRetriever {
 
     private Map<String, NodeScore> strongestNodeByIntentCode(List<NodeScore> kbIntents) {
         Map<String, NodeScore> result = new HashMap<>();
+        if (CollUtil.isEmpty(kbIntents)) {
+            return result;
+        }
         for (NodeScore nodeScore : kbIntents) {
             if (nodeScore == null || nodeScore.getNode() == null || StrUtil.isBlank(nodeScore.getNode().getId())) {
                 continue;
@@ -128,6 +133,15 @@ public class ProgressiveKeywordEsPlanRetriever {
                     (existing, candidate) -> candidate.getScore() > existing.getScore() ? candidate : existing);
         }
         return result;
+    }
+
+    private String kbIdOf(IntentRetrievalPlan intentPlan, Map<String, NodeScore> nodeByIntentCode) {
+        if (StrUtil.isNotBlank(intentPlan.kbId())) {
+            return intentPlan.kbId().trim();
+        }
+        NodeScore nodeScore = nodeByIntentCode.get(intentPlan.intentCode());
+        IntentNode node = nodeScore == null ? null : nodeScore.getNode();
+        return node == null ? null : StrUtil.trim(node.getKbId());
     }
 
     private void mergeByChunkIdentity(Map<String, RetrievedChunk> candidates,

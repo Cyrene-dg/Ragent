@@ -26,6 +26,8 @@ public record IntentRetrievalPlan(
         String intentCode,
         String intentName,
         double intentScore,
+        String kbId,
+        String collectionName,
         Map<String, Object> routeFilters,
         EntityResolution entityResolution,
         List<RetrievalFilterLevel> filterLevels
@@ -34,5 +36,11 @@ public record IntentRetrievalPlan(
     public IntentRetrievalPlan {
         routeFilters = Map.copyOf(new LinkedHashMap<>(routeFilters));
         filterLevels = List.copyOf(filterLevels);
+    }
+
+    public IntentRetrievalPlan(String intentCode, String intentName, double intentScore,
+                               Map<String, Object> routeFilters, EntityResolution entityResolution,
+                               List<RetrievalFilterLevel> filterLevels) {
+        this(intentCode, intentName, intentScore, null, null, routeFilters, entityResolution, filterLevels);
     }
 }
