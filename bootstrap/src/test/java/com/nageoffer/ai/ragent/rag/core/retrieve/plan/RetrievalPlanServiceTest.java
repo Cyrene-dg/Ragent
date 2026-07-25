@@ -67,7 +67,7 @@ class RetrievalPlanServiceTest {
         EntityCatalogService entityCatalogService = new EntityCatalogService(objectMapper, resourceLoader, properties);
         EntityResolver entityResolver = new EntityResolver(entityCatalogService);
         IntentRouteRuleService routeRuleService = new IntentRouteRuleService(objectMapper, resourceLoader, properties);
-        retrievalPlanService = new RetrievalPlanService(properties, routeRuleService, entityResolver);
+        retrievalPlanService = new RetrievalPlanService(properties, routeRuleService, entityResolver, new ElementFacetResolver());
     }
 
     @Test
@@ -136,6 +136,25 @@ class RetrievalPlanServiceTest {
         assertEquals("entity-category-fallback", fallback.filterLevels().get(0).name());
         assertEquals("weapon", fallback.filterLevels().get(0).metadataFilters().get("category"));
         assertEquals("12502", fallback.filterLevels().get(0).metadataFilters().get("entity_id"));
+    }
+
+    @Test
+    void usesExplicitElementFacetForCharacterPlansAndStopsInsideThatElement() {
+        RetrievalPlan plan = retrievalPlanService.buildPlan("冰系角色有哪些", List.of(score("genshin_v7_character_skill")));
+
+        IntentRetrievalPlan intentPlan = plan.intentPlans().get(0);
+        assertEquals("cryo", intentPlan.routeFilters().get("element"));
+        assertEquals("cryo", intentPlan.filterLevels().get(0).metadataFilters().get("element"));
+        assertEquals(RetrievalFilterLevel.StopCondition.ANY_HIT, intentPlan.filterLevels().get(0).stopCondition());
+        assertEquals("cryo", intentPlan.filterLevels().get(1).metadataFilters().get("element"));
+        assertFalse(intentPlan.filterLevels().get(2).metadataFilters().containsKey("element"));
+    }
+
+    @Test
+    void doesNotApplyElementFacetToNonCharacterRoute() {
+        RetrievalPlan plan = retrievalPlanService.buildPlan("冰系武器有哪些", List.of(score("genshin_v7_weapon_detail")));
+
+        assertFalse(plan.intentPlans().get(0).routeFilters().containsKey("element"));
     }
 
     private NodeScore score(String intentCode) {

@@ -20,6 +20,7 @@ package com.nageoffer.ai.ragent.knowledge.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.nageoffer.ai.ragent.knowledge.controller.request.KnowledgeChunkBatchRequest;
 import com.nageoffer.ai.ragent.knowledge.controller.request.KnowledgeChunkCreateRequest;
+import com.nageoffer.ai.ragent.knowledge.controller.request.KnowledgeChunkMetadataBatchUpdateRequest;
 import com.nageoffer.ai.ragent.knowledge.controller.request.KnowledgeChunkPageRequest;
 import com.nageoffer.ai.ragent.knowledge.controller.request.KnowledgeChunkUpdateRequest;
 import com.nageoffer.ai.ragent.knowledge.controller.vo.KnowledgeChunkVO;
@@ -27,6 +28,7 @@ import com.nageoffer.ai.ragent.framework.convention.Result;
 import com.nageoffer.ai.ragent.framework.web.Results;
 import com.nageoffer.ai.ragent.knowledge.service.KnowledgeChunkService;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -76,6 +78,17 @@ public class KnowledgeChunkController {
                                     @RequestBody List<KnowledgeChunkCreateRequest> requests,
                                     @RequestParam(value = "write-vector", defaultValue = "false") boolean writeVector) {
         knowledgeChunkService.batchCreate(docId, requests, writeVector);
+        return Results.success();
+    }
+
+    /**
+     * 批量更新同一文档的检索元数据，不立即重复计算向量。
+     * 调用方应在本次批量写入后调用 rebuild 接口，同步重建 Milvus 与 ES。
+     */
+    @PutMapping("/knowledge-base/docs/{doc-id}/chunks/batch-metadata")
+    public Result<Void> batchUpdateMetadata(@PathVariable("doc-id") String docId,
+                                            @RequestBody List<@Valid KnowledgeChunkMetadataBatchUpdateRequest> requests) {
+        knowledgeChunkService.batchUpdateMetadata(docId, requests);
         return Results.success();
     }
 

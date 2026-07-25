@@ -20,6 +20,7 @@ package com.nageoffer.ai.ragent.knowledge.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.nageoffer.ai.ragent.knowledge.controller.request.KnowledgeChunkBatchRequest;
 import com.nageoffer.ai.ragent.knowledge.controller.request.KnowledgeChunkCreateRequest;
+import com.nageoffer.ai.ragent.knowledge.controller.request.KnowledgeChunkMetadataBatchUpdateRequest;
 import com.nageoffer.ai.ragent.knowledge.controller.request.KnowledgeChunkPageRequest;
 import com.nageoffer.ai.ragent.knowledge.controller.request.KnowledgeChunkUpdateRequest;
 import com.nageoffer.ai.ragent.knowledge.controller.vo.KnowledgeChunkVO;
@@ -82,6 +83,12 @@ public interface KnowledgeChunkService {
      * @param requestParam 更新分片请求参数
      */
     void update(String docId, String chunkId, KnowledgeChunkUpdateRequest requestParam);
+
+    /**
+     * 批量覆盖同一文档的 Chunk 元数据，不做逐条向量化。
+     * 完成后由调用方对文档执行一次 rebuild 以同步检索索引。
+     */
+    void batchUpdateMetadata(String docId, List<KnowledgeChunkMetadataBatchUpdateRequest> requestParams);
 
     /**
      * 删除指定文档的特定分片

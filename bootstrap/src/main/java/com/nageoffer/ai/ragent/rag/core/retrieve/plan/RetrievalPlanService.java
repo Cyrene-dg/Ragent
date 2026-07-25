@@ -41,6 +41,7 @@ public class RetrievalPlanService {
     private final MetadataRetrievalProperties properties;
     private final IntentRouteRuleService intentRouteRuleService;
     private final EntityResolver entityResolver;
+    private final ElementFacetResolver elementFacetResolver;
 
     @RagTraceNode(name = "retrieval-plan", type = "RETRIEVE")
     public RetrievalPlan buildPlan(String question, List<NodeScore> kbIntents) {
@@ -67,7 +68,7 @@ public class RetrievalPlanService {
         for (NodeScore nodeScore : strongestIntentByCode.values()) {
             IntentNode node = nodeScore.getNode();
             intentRouteRuleService.findByIntentCode(node.getId()).ifPresent(rule -> {
-                Map<String, Object> routeFilters = rule.metadataFilters();
+                Map<String, Object> routeFilters = enrichWithElementFacet(question, rule.metadataFilters());
                 EntityResolution compatibleEntity = isCompatible(entityResolution, routeFilters)
                         ? entityResolution
                         : entityResolver.resolve(question, categoriesOf(routeFilters));
@@ -109,9 +110,15 @@ public class RetrievalPlanService {
     private List<RetrievalFilterLevel> buildFilterLevels(Map<String, Object> routeFilters,
                                                          EntityResolution entityResolution) {
         Map<String, Object> route = new LinkedHashMap<>(routeFilters);
+        Map<String, Object> routeWithoutElement = new LinkedHashMap<>(route);
+        routeWithoutElement.remove("element");
         Map<String, Object> categoryOnly = new LinkedHashMap<>();
         if (route.containsKey("category")) {
             categoryOnly.put("category", route.get("category"));
+        }
+        Map<String, Object> categoryElement = new LinkedHashMap<>(categoryOnly);
+        if (route.containsKey("element")) {
+            categoryElement.put("element", route.get("element"));
         }
 
         List<Map<String, Object>> scopes = new ArrayList<>();
@@ -120,18 +127,25 @@ public class RetrievalPlanService {
             strict.putAll(route);
             addUnique(scopes, strict);
 
+            Map<String, Object> entityCategoryElement = entityFilters(entityResolution);
+            entityCategoryElement.putAll(categoryElement);
+            addUnique(scopes, entityCategoryElement);
+
             Map<String, Object> entityCategory = entityFilters(entityResolution);
             entityCategory.putAll(categoryOnly);
             addUnique(scopes, entityCategory);
         }
         addUnique(scopes, route);
+        addUnique(scopes, categoryElement);
+        addUnique(scopes, routeWithoutElement);
         addUnique(scopes, categoryOnly);
         addUnique(scopes, Map.of());
 
         List<RetrievalFilterLevel> levels = new ArrayList<>();
         for (int index = 0; index < scopes.size(); index++) {
             Map<String, Object> filters = scopes.get(index);
-            levels.add(new RetrievalFilterLevel(index + 1, levelName(index, filters, entityResolution), filters));
+            levels.add(new RetrievalFilterLevel(index + 1, levelName(index, filters, entityResolution), filters,
+                    stopConditionFor(filters)));
         }
         return levels;
     }
@@ -157,9 +171,29 @@ public class RetrievalPlanService {
         }
     }
 
+    private Map<String, Object> enrichWithElementFacet(String question, Map<String, Object> routeFilters) {
+        Map<String, Object> enriched = new LinkedHashMap<>(routeFilters);
+        if (categoriesOf(routeFilters).contains("character")) {
+            elementFacetResolver.resolve(question).ifPresent(element -> enriched.put("element", element));
+        }
+        return enriched;
+    }
+
+    private static RetrievalFilterLevel.StopCondition stopConditionFor(Map<String, Object> filters) {
+        return filters.containsKey("entity_id") || filters.containsKey("element")
+                ? RetrievalFilterLevel.StopCondition.ANY_HIT
+                : RetrievalFilterLevel.StopCondition.TARGET_REACHED;
+    }
+
     private static String levelName(int index, Map<String, Object> filters, EntityResolution entityResolution) {
         if (filters.isEmpty()) {
             return "v7-global";
+        }
+        if (filters.containsKey("element") && filters.containsKey("doc_type")) {
+            return "element-category-doc-type";
+        }
+        if (filters.containsKey("element")) {
+            return "element-category";
         }
         if (entityResolution.isMatched() && filters.containsKey("entity_id") && filters.containsKey("doc_type")) {
             return "entity-category-doc-type";

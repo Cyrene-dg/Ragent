@@ -21,6 +21,8 @@ REQUIRED_METADATA = {
     "language",
 }
 
+VALID_CHARACTER_ELEMENTS = {"anemo", "cryo", "dendro", "electro", "geo", "hydro", "pyro"}
+
 
 def load_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
@@ -49,6 +51,12 @@ def main() -> None:
     assert all(chunk["content"].strip() for chunk in chunks), "empty chunk content"
     assert all(chunk["char_count"] <= args.max_chars for chunk in chunks), "oversized chunk found"
     assert all(REQUIRED_METADATA <= set(chunk["metadata"]) for chunk in chunks), "missing metadata field"
+    character_elements = [
+        chunk["metadata"].get("element")
+        for chunk in chunks
+        if chunk["metadata"].get("category") == "character" and chunk["metadata"].get("element") is not None
+    ]
+    assert all(element in VALID_CHARACTER_ELEMENTS for element in character_elements), "invalid character element"
 
     codes = {node["intentCode"] for node in nodes}
     assert len(codes) == len(nodes), "duplicate semantic intent code"

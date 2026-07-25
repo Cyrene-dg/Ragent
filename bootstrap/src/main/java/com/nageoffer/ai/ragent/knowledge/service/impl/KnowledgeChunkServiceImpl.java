@@ -30,6 +30,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nageoffer.ai.ragent.knowledge.controller.request.KnowledgeChunkBatchRequest;
 import com.nageoffer.ai.ragent.knowledge.controller.request.KnowledgeChunkCreateRequest;
+import com.nageoffer.ai.ragent.knowledge.controller.request.KnowledgeChunkMetadataBatchUpdateRequest;
 import com.nageoffer.ai.ragent.knowledge.controller.request.KnowledgeChunkPageRequest;
 import com.nageoffer.ai.ragent.knowledge.controller.request.KnowledgeChunkUpdateRequest;
 import com.nageoffer.ai.ragent.knowledge.controller.vo.KnowledgeChunkVO;
@@ -59,8 +60,11 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -70,6 +74,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
+
+    /** DashScope text-embedding-v4 accepts at most ten inputs per request. */
+    private static final int EMBEDDING_BATCH_LIMIT = 10;
 
     private final KnowledgeChunkMapper chunkMapper;
     private final KnowledgeDocumentMapper documentMapper;
@@ -306,6 +313,45 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    public void batchUpdateMetadata(String docId, List<KnowledgeChunkMetadataBatchUpdateRequest> requestParams) {
+        if (CollUtil.isEmpty(requestParams)) {
+            return;
+        }
+        KnowledgeDocumentDO documentDO = documentMapper.selectById(docId);
+        Assert.notNull(documentDO, () -> new ClientException("文档不存在"));
+
+        Map<Long, Map<String, Object>> metadataByChunkId = new HashMap<>();
+        for (KnowledgeChunkMetadataBatchUpdateRequest request : requestParams) {
+            Assert.notNull(request, () -> new ClientException("Chunk metadata 请求不能为空"));
+            Assert.isTrue(StringUtils.hasText(request.getChunkId()), () -> new ClientException("Chunk ID 不能为空"));
+            Assert.notNull(request.getMetadata(), () -> new ClientException("Chunk metadata 不能为空"));
+            Long chunkId = Long.parseLong(request.getChunkId());
+            Assert.isTrue(metadataByChunkId.putIfAbsent(chunkId, request.getMetadata()) == null,
+                    () -> new ClientException("批量 metadata 请求中存在重复 Chunk ID: " + chunkId));
+        }
+
+        List<KnowledgeChunkDO> chunks = chunkMapper.selectByIds(metadataByChunkId.keySet());
+        Assert.isTrue(chunks.size() == metadataByChunkId.size(), () -> new ClientException("部分 Chunk 不存在"));
+        String username = UserContext.getUsername();
+        int changed = 0;
+        for (KnowledgeChunkDO chunk : chunks) {
+            Assert.isTrue(chunk.getDocId().equals(Long.parseLong(docId)),
+                    () -> new ClientException("Chunk " + chunk.getId() + " 不属于文档 " + docId));
+            String serializedMetadata = serializeMetadata(metadataByChunkId.get(chunk.getId()));
+            if (Objects.equals(serializedMetadata, chunk.getMetadataJson())) {
+                continue;
+            }
+            chunk.setMetadataJson(serializedMetadata);
+            chunk.setUpdatedBy(username);
+            chunkMapper.updateById(chunk);
+            changed++;
+        }
+        log.info("批量更新 Chunk metadata 成功, kbId={}, docId={}, changed={}; 请随后重建文档索引",
+                documentDO.getKbId(), docId, changed);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
     public void delete(String docId, String chunkId) {
         KnowledgeDocumentDO documentDO = documentMapper.selectById(docId);
         Assert.notNull(documentDO, () -> new ClientException("文档不存在"));
@@ -430,10 +476,7 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
         String kbId = String.valueOf(documentDO.getKbId());
         log.info("开始重建文档向量, kbId={}, docId={}", kbId, docId);
 
-        // 1. Milvus 先删除该 doc 下所有向量
-        vectorStoreService.deleteDocumentVectors(kbId, docId);
-
-        // 2. 读取 MySQL enabled=1 的 chunks
+        // 1. 读取 MySQL enabled=1 的 chunks
         List<KnowledgeChunkDO> enabledChunks = chunkMapper.selectList(
                 new LambdaQueryWrapper<KnowledgeChunkDO>()
                         .eq(KnowledgeChunkDO::getDocId, docId)
@@ -442,11 +485,12 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
         );
 
         if (enabledChunks.isEmpty()) {
+            vectorStoreService.deleteDocumentVectors(kbId, docId);
             log.warn("文档下没有启用的 Chunk，跳过向量重建, kbId={}, docId={}", kbId, docId);
             return;
         }
 
-        // 3. 重新向量化并重建索引
+        // 2. 先完成所有 Embedding，再删除旧索引。这样远端模型失败时仍保留旧向量。
         List<VectorChunk> chunks = enabledChunks.stream()
                 .map(
                         each -> VectorChunk.builder()
@@ -460,6 +504,8 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
 
         attachEmbeddings(chunks, resolveEmbeddingModel(documentDO.getKbId()));
 
+        // 3. Embedding 完整成功后才替换 Milvus 文档索引。
+        vectorStoreService.deleteDocumentVectors(kbId, docId);
         vectorStoreService.indexDocumentChunks(kbId, docId, chunks);
 
         log.info("重建文档向量成功, kbId={}, docId={}, chunkCount={}", kbId, docId, enabledChunks.size());
@@ -621,8 +667,16 @@ public class KnowledgeChunkServiceImpl implements KnowledgeChunkService {
         if (CollUtil.isEmpty(chunks)) {
             return;
         }
-        List<String> texts = chunks.stream().map(VectorChunk::getContent).toList();
-        List<List<Float>> vectors = embedBatch(texts, embeddingModel);
+        List<List<Float>> vectors = new ArrayList<>(chunks.size());
+        for (int start = 0; start < chunks.size(); start += EMBEDDING_BATCH_LIMIT) {
+            int end = Math.min(start + EMBEDDING_BATCH_LIMIT, chunks.size());
+            List<String> texts = chunks.subList(start, end).stream().map(VectorChunk::getContent).toList();
+            List<List<Float>> batchVectors = embedBatch(texts, embeddingModel);
+            if (batchVectors == null || batchVectors.size() != texts.size()) {
+                throw new ServiceException("向量结果数量不匹配");
+            }
+            vectors.addAll(batchVectors);
+        }
         if (vectors == null || vectors.size() != chunks.size()) {
             throw new ServiceException("向量结果数量不匹配");
         }
