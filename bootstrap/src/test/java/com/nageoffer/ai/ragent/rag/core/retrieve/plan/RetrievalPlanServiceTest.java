@@ -34,6 +34,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RetrievalPlanServiceTest {
 
@@ -41,6 +42,7 @@ class RetrievalPlanServiceTest {
     Path tempDirectory;
 
     private RetrievalPlanService retrievalPlanService;
+    private MetadataRetrievalProperties properties;
 
     @BeforeEach
     void setUp() throws IOException {
@@ -59,7 +61,7 @@ class RetrievalPlanServiceTest {
                 {"entity_type":"weapon","entity_id":"11501","entity_name":"狼的末路","aliases":["狼末","狼的末路"],"category":"weapon","source_document":"weapons/wgs.md","source_version":"v7"}
                 """, StandardCharsets.UTF_8);
 
-        MetadataRetrievalProperties properties = new MetadataRetrievalProperties();
+        properties = new MetadataRetrievalProperties();
         properties.setIntentRoutesLocation("file:" + routes.toAbsolutePath());
         properties.setEntityCatalogLocation("file:" + catalog.toAbsolutePath());
         ObjectMapper objectMapper = new ObjectMapper();
@@ -155,6 +157,53 @@ class RetrievalPlanServiceTest {
         RetrievalPlan plan = retrievalPlanService.buildPlan("冰系武器有哪些", List.of(score("genshin_v7_weapon_detail")));
 
         assertFalse(plan.intentPlans().get(0).routeFilters().containsKey("element"));
+    }
+
+    @Test
+    void canDisableElementFacetForBaselineEvaluationWithoutChangingTheCorpus() {
+        MetadataRetrievalProperties baselineProperties = new MetadataRetrievalProperties();
+        baselineProperties.setEnabled(true);
+        baselineProperties.setElementFacetEnabled(false);
+        baselineProperties.setIntentRoutesLocation(properties.getIntentRoutesLocation());
+        baselineProperties.setEntityCatalogLocation(properties.getEntityCatalogLocation());
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        DefaultResourceLoader resourceLoader = new DefaultResourceLoader();
+        EntityCatalogService baselineCatalog = new EntityCatalogService(objectMapper, resourceLoader, baselineProperties);
+        RetrievalPlanService baselineService = new RetrievalPlanService(
+                baselineProperties,
+                new IntentRouteRuleService(objectMapper, resourceLoader, baselineProperties),
+                new EntityResolver(baselineCatalog),
+                new ElementFacetResolver()
+        );
+
+        RetrievalPlan plan = baselineService.buildPlan("冰系角色有哪些", List.of(score("genshin_v7_character_skill")));
+
+        assertFalse(plan.intentPlans().get(0).routeFilters().containsKey("element"));
+        assertFalse(plan.intentPlans().get(0).filterLevels().stream()
+                .anyMatch(level -> level.metadataFilters().containsKey("element")));
+    }
+
+    @Test
+    void explicitEvaluationPolicyOverridesTheRuntimeElementSettingWithoutMutatingIt() {
+        assertTrue(properties.isElementFacetEnabled());
+
+        RetrievalPlan baselinePlan = retrievalPlanService.buildPlan(
+                "冰系角色有哪些",
+                List.of(score("genshin_v7_character_skill")),
+                EntityResolution.notFound(),
+                false
+        );
+        RetrievalPlan candidatePlan = retrievalPlanService.buildPlan(
+                "冰系角色有哪些",
+                List.of(score("genshin_v7_character_skill")),
+                EntityResolution.notFound(),
+                true
+        );
+
+        assertFalse(baselinePlan.intentPlans().get(0).routeFilters().containsKey("element"));
+        assertEquals("cryo", candidatePlan.intentPlans().get(0).routeFilters().get("element"));
+        assertTrue(properties.isElementFacetEnabled());
     }
 
     private NodeScore score(String intentCode) {

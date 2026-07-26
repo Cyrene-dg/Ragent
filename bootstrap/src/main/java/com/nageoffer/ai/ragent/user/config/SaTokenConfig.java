@@ -20,6 +20,7 @@ package com.nageoffer.ai.ragent.user.config;
 import cn.dev33.satoken.interceptor.SaInterceptor;
 import cn.dev33.satoken.stp.StpUtil;
 import com.nageoffer.ai.ragent.rag.config.DemoModeInterceptor;
+import com.nageoffer.ai.ragent.rag.config.MetadataRetrievalProperties;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,9 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * SaToken 配置类
@@ -47,6 +51,9 @@ public class SaTokenConfig implements WebMvcConfigurer {
      */
     private final UserContextInterceptor userContextInterceptor;
 
+    /** Local evaluation is explicitly enabled only for offline test processes. */
+    private final MetadataRetrievalProperties metadataRetrievalProperties;
+
     /**
      * 添加拦截器配置
      *
@@ -54,6 +61,11 @@ public class SaTokenConfig implements WebMvcConfigurer {
      */
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        List<String> excludedPaths = new ArrayList<>(List.of("/auth/**", "/error"));
+        if (metadataRetrievalProperties.isEvaluationEnabled()) {
+            excludedPaths.add("/rag/evaluation/metadata-retrieval/**");
+        }
+
         // 注册 SaToken 登录拦截器
         registry.addInterceptor(new SaInterceptor(handler -> {
                     // 异步调度请求跳过登录检查（SSE 完成回调会触发 asyncDispatch，此时 SaToken 上下文已丢失）
@@ -75,20 +87,20 @@ public class SaTokenConfig implements WebMvcConfigurer {
                 // 拦截所有路径
                 .addPathPatterns("/**")
                 // 排除认证相关路径和错误页面
-                .excludePathPatterns("/auth/**", "/error");
+                .excludePathPatterns(excludedPaths);
 
         // 注册体验环境只读模式拦截器
         registry.addInterceptor(demoModeInterceptor)
                 // 拦截所有路径
                 .addPathPatterns("/**")
                 // 排除认证相关路径和错误页面
-                .excludePathPatterns("/auth/**", "/error");
+                .excludePathPatterns(excludedPaths);
 
         // 注册用户上下文拦截器
         registry.addInterceptor(userContextInterceptor)
                 // 拦截所有路径
                 .addPathPatterns("/**")
                 // 排除认证相关路径和错误页面
-                .excludePathPatterns("/auth/**", "/error");
+                .excludePathPatterns(excludedPaths);
     }
 }

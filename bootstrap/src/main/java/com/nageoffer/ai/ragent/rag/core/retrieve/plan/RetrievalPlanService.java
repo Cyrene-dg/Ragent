@@ -50,6 +50,17 @@ public class RetrievalPlanService {
 
     @RagTraceNode(name = "retrieval-plan", type = "RETRIEVE")
     public RetrievalPlan buildPlan(String question, List<NodeScore> kbIntents, EntityResolution entityResolution) {
+        return buildPlan(question, kbIntents, entityResolution, properties.isElementFacetEnabled());
+    }
+
+    /**
+     * Builds the same metadata plan with a caller-specified element-facet policy.
+     * This is used by offline A/B evaluation only; normal retrieval uses the configured value.
+     */
+    public RetrievalPlan buildPlan(String question,
+                                   List<NodeScore> kbIntents,
+                                   EntityResolution entityResolution,
+                                   boolean elementFacetEnabled) {
         if (!properties.isEnabled()) {
             return emptyPlan(question);
         }
@@ -68,7 +79,8 @@ public class RetrievalPlanService {
         for (NodeScore nodeScore : strongestIntentByCode.values()) {
             IntentNode node = nodeScore.getNode();
             intentRouteRuleService.findByIntentCode(node.getId()).ifPresent(rule -> {
-                Map<String, Object> routeFilters = enrichWithElementFacet(question, rule.metadataFilters());
+                Map<String, Object> routeFilters = enrichWithElementFacet(
+                        question, rule.metadataFilters(), elementFacetEnabled);
                 EntityResolution compatibleEntity = isCompatible(entityResolution, routeFilters)
                         ? entityResolution
                         : entityResolver.resolve(question, categoriesOf(routeFilters));
@@ -171,9 +183,11 @@ public class RetrievalPlanService {
         }
     }
 
-    private Map<String, Object> enrichWithElementFacet(String question, Map<String, Object> routeFilters) {
+    private Map<String, Object> enrichWithElementFacet(String question,
+                                                        Map<String, Object> routeFilters,
+                                                        boolean elementFacetEnabled) {
         Map<String, Object> enriched = new LinkedHashMap<>(routeFilters);
-        if (categoriesOf(routeFilters).contains("character")) {
+        if (elementFacetEnabled && categoriesOf(routeFilters).contains("character")) {
             elementFacetResolver.resolve(question).ifPresent(element -> enriched.put("element", element));
         }
         return enriched;

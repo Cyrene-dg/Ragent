@@ -132,6 +132,10 @@ rag:
   metadata-routing:
     enabled: true
     execution-enabled: true
+    # Set false only for the v7 metadata retrieval baseline in offline A/B evaluation.
+    element-facet-enabled: true
+    # Set true only in a local evaluation process; it exposes raw retrieval candidates.
+    evaluation-enabled: false
     intent-routes-location: file:resources/genshin_seed_v7/config/intent_routes.json
     entity-catalog-location: file:resources/genshin_seed_v7/config/entity_catalog.jsonl
     entity-fallback-kb-id: 2080272025011851264

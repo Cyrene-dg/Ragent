@@ -35,6 +35,19 @@ public class MetadataRetrievalProperties {
     /** Apply the generated plan to Milvus; disabled keeps the legacy retrieval path. */
     private boolean executionEnabled = true;
 
+    /**
+     * Adds an explicit character element (for example {@code cryo}) to a v7 retrieval plan.
+     * Kept configurable so offline evaluation can compare the same corpus with and without
+     * this one retrieval constraint.
+     */
+    private boolean elementFacetEnabled = true;
+
+    /**
+     * Enables the local-only metadata evaluation endpoint.  It is false by default so
+     * normal deployments do not expose raw retrieval candidates.
+     */
+    private boolean evaluationEnabled = false;
+
     /** Declarative leaf-intent to metadata route mapping. */
     private String intentRoutesLocation = "file:resources/genshin_seed_v7/config/intent_routes.json";
 
