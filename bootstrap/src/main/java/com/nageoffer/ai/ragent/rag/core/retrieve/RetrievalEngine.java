@@ -147,8 +147,8 @@ public class RetrievalEngine {
         List<NodeScore> kbIntents = filterKbIntents(intent.nodeScores());
         List<NodeScore> mcpIntents = filterMCPIntents(intent.nodeScores());
 
-        // Phase 1 records the decision only.  Existing search channels still
-        // receive their original request and therefore preserve current recall behavior.
+        // 先把“意图 + 实体 + 路由规则”汇总为只读 Plan；随后原样传入多通道检索引擎。
+        // 开启 executionEnabled 时，ES/Milvus 消费 Plan 做分层过滤；关闭时各通道保持旧检索路径。
         RetrievalPlan retrievalPlan = retrievalPlanService.buildPlan(
                 intent.subQuestion(), kbIntents, intent.entityResolution());
         if (!retrievalPlan.isEmpty()) {

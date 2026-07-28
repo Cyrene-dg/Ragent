@@ -82,6 +82,7 @@ public class KeywordEsSearchChannel implements SearchChannel {
         long startTime = System.currentTimeMillis();
         try {
             String question = context.getMainQuestion();
+            // ES 与 Milvus 使用同一份 Plan；只有全部计划层都失败时，才降级回旧 ES 检索。
             if (metadataRetrievalProperties.isEnabled()
                     && metadataRetrievalProperties.isExecutionEnabled()
                     && context.getRetrievalPlan() != null
@@ -105,6 +106,7 @@ public class KeywordEsSearchChannel implements SearchChannel {
                 }
                 log.warn("All ES metadata-plan searches failed; fall back to legacy ES retrieval");
             }
+            // 无 Plan 或 Plan 全部失败：保留原有的“按意图知识库限定”的 ES 召回行为。
             Set<String> kbIds = extractKbIds(context);
             int topKMultiplier = Math.max(1, properties.getTopKMultiplier());
             int recallSize = Math.max(1, context.getTopK() * topKMultiplier);

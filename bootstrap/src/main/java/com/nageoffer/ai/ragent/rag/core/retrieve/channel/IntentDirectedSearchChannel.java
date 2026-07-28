@@ -160,6 +160,11 @@ public class IntentDirectedSearchChannel implements SearchChannel {
                 .toList();
     }
 
+    /**
+     * Milvus 意图定向通道的分流点。
+     * 已被 Plan 覆盖的意图交给 ProgressiveMilvusPlanRetriever 做分层元数据检索；
+     * 未出现在 Plan 中的旧意图仍走 legacy 路径，避免路由表缺项时直接漏召回。
+     */
     private List<RetrievedChunk> retrieveByPlanOrLegacy(SearchContext context,
                                                          List<NodeScore> kbIntents,
                                                          Map<String, String> embeddingModelByCollection) {
@@ -168,6 +173,7 @@ public class IntentDirectedSearchChannel implements SearchChannel {
                 && metadataRetrievalProperties.isExecutionEnabled()
                 && retrievalPlan != null
                 && !retrievalPlan.isEmpty()) {
+            // 将“Plan 已覆盖”和“Plan 未覆盖”的意图拆开，二者结果最终合并。
             Set<String> plannedIntentCodes = retrievalPlan.intentPlans().stream()
                     .map(IntentRetrievalPlan::intentCode)
                     .collect(java.util.stream.Collectors.toSet());

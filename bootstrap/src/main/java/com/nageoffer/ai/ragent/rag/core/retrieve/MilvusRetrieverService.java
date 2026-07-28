@@ -49,6 +49,10 @@ public class MilvusRetrieverService implements RetrieverService {
     private final MilvusClientV2 milvusClient;
     private final RAGDefaultProperties ragDefaultProperties;
 
+    /**
+     * 普通入口：先用指定 Embedding 模型把 query 编码为向量并做 L2 归一化，再进入向量检索。
+     * 分层 Plan 场景通常复用下方 retrieveByVector，避免同一问题每层重复调用 Embedding。
+     */
     @Override
     public List<RetrievedChunk> retrieve(RetrieveRequest retrieveParam) {
         // 支持按知识库绑定的模型生成查询向量，避免跨模型维度不一致。
@@ -62,6 +66,10 @@ public class MilvusRetrieverService implements RetrieverService {
         return retrieveByVector(norm, retrieveParam);
     }
 
+    /**
+     * 已有 queryVector 的检索入口。metadataFilters 会被转换成 Milvus 标量过滤表达式，
+     * 使“向量相似度排序”只在限定的元数据范围内发生。
+     */
     @Override
     public List<RetrievedChunk> retrieveByVector(float[] vector, RetrieveRequest retrieveParam) {
         List<BaseVector> vectors = List.of(new FloatVec(vector));
@@ -114,6 +122,11 @@ public class MilvusRetrieverService implements RetrieverService {
         return nv;
     }
 
+    /**
+     * 将 {category=character, entity_id=10000002} 编译成类似：
+     * metadata["category"] == "character" && metadata["entity_id"] == "10000002"。
+     * Collection 值会变为同一字段的 OR 条件；字段名通过白名单正则校验，避免拼接任意表达式。
+     */
     private String buildMetadataFilter(Map<String, Object> filters) {
         if (filters == null || filters.isEmpty()) {
             return "";
@@ -125,6 +138,7 @@ public class MilvusRetrieverService implements RetrieverService {
                 .collect(Collectors.joining(" && "));
     }
 
+    /** 单值为等值条件；多值为 (field == a || field == b) 的 OR 条件。 */
     private String buildMetadataPredicate(String key, Object value) {
         String field = "metadata[\"" + key + "\"]";
         if (value instanceof Collection<?> values) {

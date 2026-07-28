@@ -22,17 +22,19 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
- * Metadata routing resources and candidate-pool policy for the v7 knowledge base.
+ * v7 元数据检索的开关、资源位置和候选池策略。
+ * 这里定义“Plan 是否生成/执行、20/40/80 三个容量口径、路由表和实体目录在哪里”，
+ * 不承载任何实际检索逻辑。
  */
 @Data
 @Component
 @ConfigurationProperties(prefix = "rag.metadata-routing")
 public class MetadataRetrievalProperties {
 
-    /** Enable v7 metadata-plan generation. */
+    /** 是否生成 v7 RetrievalPlan；关闭后完全不进入元数据路由流程。 */
     private boolean enabled = true;
 
-    /** Apply the generated plan to Milvus; disabled keeps the legacy retrieval path. */
+    /** 是否让 ES/Milvus 真正执行生成的 Plan；关闭后仍可记录 Plan，但检索走旧链路。 */
     private boolean executionEnabled = true;
 
     /**
@@ -60,15 +62,15 @@ public class MetadataRetrievalProperties {
     /** Milvus collection paired with {@link #entityFallbackKbId}. */
     private String entityFallbackCollectionName = "genshinroutingv7";
 
-    /** Desired unique candidate count before a later retrieval phase stops relaxing filters. */
+    /** 单个意图计划在继续放宽普通过滤层前，希望累计拿到的去重候选数。 */
     private int targetCandidateCount = 20;
 
-    /** Maximum candidate pool inside one metadata retrieval plan. */
+    /** 单个检索通道（Milvus 或 ES）执行一份 Plan 时的候选池上限。 */
     private int maxCandidatePool = 40;
 
     /**
-     * Safety ceiling after cross-channel de-duplication and before rerank.
-     * The limiter is dormant while the candidate count is at or below this value.
+     * 跨通道合并、去重后进入 Rerank 前的安全上限；超过才启用 RRF 融合并截断。
+     * 它不同于 maxCandidatePool：前者管“ES + Milvus 合并后”，后者管“单通道 Plan 内”。
      */
     private int maxRerankCandidates = 80;
 

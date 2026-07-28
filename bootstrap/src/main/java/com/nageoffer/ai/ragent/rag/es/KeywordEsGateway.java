@@ -85,8 +85,8 @@ public class KeywordEsGateway {
     }
 
     /**
-     * Keyword retrieval within a knowledge-base scope and an optional metadata scope.
-     * Metadata values are always emitted as filter clauses, never as full-text terms.
+     * ES 关键词检索入口：全文部分用 multi_match + phrase 匹配，kb_id 与 metadata 始终进入 bool.filter。
+     * 因此 category、entity_id 等不是“搜词”，而是先缩小文档集合，再由 BM25 在集合内排序。
      */
     public List<RetrievedChunk> search(String query,
                                        int size,
@@ -102,6 +102,7 @@ public class KeywordEsGateway {
             body.put("track_total_hits", false);
             body.put("min_score", properties.getMinScore());
 
+            // should 是全文相关性部分：multi_match 覆盖标题/关键词/正文，match_phrase 奖励连续短语命中。
             ObjectNode queryNode = body.putObject("query").putObject("bool");
             ArrayNode should = queryNode.putArray("should");
 
@@ -127,6 +128,7 @@ public class KeywordEsGateway {
 
             queryNode.put("minimum_should_match", 1);
 
+            // filter 不参与 BM25 打分，只做精确范围约束；这与 Milvus 的 metadata filter 语义保持一致。
             ArrayNode filter = queryNode.putArray("filter");
             filter.addObject()
                     .putObject("term")
@@ -355,6 +357,10 @@ public class KeywordEsGateway {
         }
     }
 
+    /**
+     * 只接受 ROUTING_METADATA_FIELDS 白名单字段。
+     * 单值生成 term，多值生成 terms（OR）查询；空值直接忽略，避免把 null 当成硬条件导致漏召回。
+     */
     private void appendMetadataFilters(ArrayNode filter, Map<String, Object> metadataFilters) {
         if (metadataFilters == null || metadataFilters.isEmpty()) {
             return;

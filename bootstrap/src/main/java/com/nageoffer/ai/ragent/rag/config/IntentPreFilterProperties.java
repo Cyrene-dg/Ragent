@@ -47,10 +47,13 @@ public class IntentPreFilterProperties {
         return enabled && leafNodeCount > candidateLimit;
     }
 
+    /** 评测/校验时使用的候选数下界；不是运行时自动把 candidateLimit 强行夹到该值。 */
     private int minCandidateLimit = 50;
 
+    /** 评测/校验时使用的候选数上界；过大将抵消海选缩短 LLM Prompt 的意义。 */
     private int maxCandidateLimit = 100;
 
+    /** 是否启用规则、BM25、向量三条海选支路；关闭一条只影响海选，不影响最终 LLM 精判。 */
     private boolean ruleEnabled = true;
 
     private boolean keywordEnabled = true;
@@ -62,23 +65,17 @@ public class IntentPreFilterProperties {
      */
     private boolean vectorAsyncWarmup = true;
 
-    /**
-     * 各路召回 TopK
-     */
+    /** 各路在融合前各自保留的 TopK，不等于最终交给 LLM 的 candidateLimit。 */
     private int ruleTopK = 80;
     private int keywordTopK = 80;
     private int vectorTopK = 80;
 
-    /**
-     * 各路保底配额
-     */
+    /** 各路的保底配额：避免最终融合结果被某一个通道完全垄断。 */
     private int ruleQuota = 20;
     private int keywordQuota = 20;
     private int vectorQuota = 20;
 
-    /**
-     * 各路融合权重
-     */
+    /** 各路融合权重：权重只影响融合排序，不改变各路原始召回结果。 */
     private double ruleWeight = 1.0;
     private double keywordWeight = 0.9;
     private double vectorWeight = 1.1;

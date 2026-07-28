@@ -65,6 +65,11 @@ public class IntentHybridRecallService {
     private final AtomicReference<IntentRecallIndex> indexCache = new AtomicReference<>();
     private final AtomicReference<String> vectorWarmupInProgress = new AtomicReference<>();
 
+    /**
+     * 第一阶段海选入口。
+     * 只有“启用海选且叶子数超过 candidateLimit”时才真正工作；小树直接交给 LLM，
+     * 避免为了缩短不存在的 Prompt 而额外增加一次规则/关键词/向量计算。
+     */
     public List<IntentNode> shortlist(String question, List<IntentNode> leafNodes) {
         if (!properties.isEnabled()
                 || StrUtil.isBlank(question)
@@ -79,6 +84,7 @@ public class IntentHybridRecallService {
             return leafNodes;
         }
 
+        // 三路独立：规则、BM25、向量并行执行；任何一路的排名都可能为最终候选提供保底覆盖。
         CompletableFuture<RouteResult> ruleFuture = CompletableFuture.supplyAsync(
                 () -> recallByRule(question, index),
                 intentClassifyExecutor
@@ -92,6 +98,7 @@ public class IntentHybridRecallService {
                 intentClassifyExecutor
         );
 
+        // join 后融合分数并截断为 Top candidateLimit；若三路都没有候选，安全回退全量叶子。
         List<RouteResult> routeResults = List.of(ruleFuture.join(), keywordFuture.join(), vectorFuture.join());
         List<IntentNode> finalCandidates = fuseAndSelect(index, routeResults);
         if (finalCandidates.isEmpty()) {
@@ -112,6 +119,10 @@ public class IntentHybridRecallService {
         return finalCandidates;
     }
 
+    /**
+     * 获取与当前意图树匹配的内存索引。fingerprint 同时考虑叶子节点和同义词映射；
+     * 任一方变化都会重建索引，避免拿旧的触发词、BM25 统计或向量去海选新树。
+     */
     private IntentRecallIndex buildOrGetIndex(List<IntentNode> leafNodes) {
         List<QueryTermMappingDO> mappings = queryTermMappingService.listEnabledMappingsSnapshot();
         String fingerprint = computeFingerprint(leafNodes, mappings);
@@ -275,6 +286,10 @@ public class IntentHybridRecallService {
         }
     }
 
+    /**
+     * 规则路：基于节点名、路径、示例和同义词形成的触发词做包含匹配。
+     * 适合“狼末”“元素战技”等显式词，速度最快，但不会独自决定最终意图。
+     */
     private RouteResult recallByRule(String question, IntentRecallIndex index) {
         if (!properties.isRuleEnabled()) {
             return RouteResult.empty(Route.RULE);
@@ -319,6 +334,10 @@ public class IntentHybridRecallService {
         return new RouteResult(Route.RULE, topScores, System.currentTimeMillis() - start);
     }
 
+    /**
+     * 关键词路：在内存倒排统计上计算 BM25，兼顾词频、逆文档频率和意图描述长度归一化。
+     * 它不依赖 ES，是意图海选专用的轻量实现。
+     */
     private RouteResult recallByKeyword(String question, IntentRecallIndex index) {
         if (!properties.isKeywordEnabled()) {
             return RouteResult.empty(Route.KEYWORD);
@@ -364,6 +383,10 @@ public class IntentHybridRecallService {
         return new RouteResult(Route.KEYWORD, topScores, System.currentTimeMillis() - start);
     }
 
+    /**
+     * 向量路：问题向量与预热好的叶子意图向量逐一算余弦相似度。
+     * 向量索引未就绪或 Embedding 服务异常时返回空结果，海选仍由规则和 BM25 继续完成。
+     */
     private RouteResult recallByVector(String question, IntentRecallIndex index) {
         if (!properties.isVectorEnabled() || !index.vectorReady()) {
             return RouteResult.empty(Route.VECTOR);
@@ -400,6 +423,10 @@ public class IntentHybridRecallService {
         return new RouteResult(Route.VECTOR, topScores, System.currentTimeMillis() - start);
     }
 
+    /**
+     * 融合三路候选：各路分数先在本路归一化，再按权重累加；同时保留每路 quota，
+     * 防止一条强路完全挤掉另两路的召回覆盖。最终仍只把 candidateLimit 个叶子交给 LLM 精判。
+     */
     private List<IntentNode> fuseAndSelect(IntentRecallIndex index, List<RouteResult> routeResults) {
         if (CollUtil.isEmpty(routeResults)) {
             return List.of();

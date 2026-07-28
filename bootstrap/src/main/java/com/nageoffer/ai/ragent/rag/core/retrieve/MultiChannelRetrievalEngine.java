@@ -68,20 +68,24 @@ public class MultiChannelRetrievalEngine {
         return retrieveKnowledgeChannels(subIntents, topK, null);
     }
 
-    /** Execute retrieval channels with an optional metadata-scoped plan. */
+    /**
+     * 带可选 RetrievalPlan 的总检索入口。
+     * Plan 只描述范围和分层策略；具体由各 SearchChannel 决定是否消费。未启用 Plan 的通道保持旧行为，
+     * 之后仍统一进入去重、候选池限制和 Rerank 的后处理链。
+     */
     public List<RetrievedChunk> retrieveKnowledgeChannels(List<SubQuestionIntent> subIntents,
                                                            int topK,
                                                            RetrievalPlan retrievalPlan) {
-        // 构建检索上下文
+        // 构建共享上下文：所有通道读到的是同一份 Plan，避免 ES/Milvus 各自重新做路由判断
         SearchContext context = buildSearchContext(subIntents, topK, retrievalPlan);
 
-        // 【阶段1：多通道并行检索】
+        // 【阶段 1：多通道并行检索】ES 与 Milvus 可以同时执行，互不等待
         List<SearchChannelResult> channelResults = executeSearchChannels(context);
         if (CollUtil.isEmpty(channelResults)) {
             return List.of();
         }
 
-        // 【阶段2：后置处理器链】
+        // 【阶段 2：后置处理器链】去重 -> 候选池限制（必要时 RRF）-> Rerank
         return executePostProcessors(channelResults, context);
     }
 
@@ -219,9 +223,7 @@ public class MultiChannelRetrievalEngine {
         return chunks;
     }
 
-    /**
-     * 构建检索上下文
-     */
+    /** 构建检索上下文，并将 Plan 原样传给所有检索通道和后处理器。 */
     private SearchContext buildSearchContext(List<SubQuestionIntent> subIntents,
                                              int topK,
                                              RetrievalPlan retrievalPlan) {

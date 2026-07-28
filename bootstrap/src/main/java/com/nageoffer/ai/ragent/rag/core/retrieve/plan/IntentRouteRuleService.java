@@ -32,7 +32,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/** Loads the declarative v7 leaf-intent to metadata-filter mapping. */
+/**
+ * 意图路由规则加载器：把叶子意图编码映射为声明式元数据条件。
+ *
+ * 例如“角色技能”叶子可映射为 {category=character, doc_type=character_skill}。
+ * 它只读取 {@code intent_routes.json} 并提供查询，不参与 LLM 分类，也不直接执行检索。
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -44,10 +49,12 @@ public class IntentRouteRuleService {
 
     private volatile Map<String, IntentRouteRule> routeByIntentCode;
 
+    /** 按 LLM 最终选择的叶子 intentCode 查询对应的元数据路由规则。 */
     public Optional<IntentRouteRule> findByIntentCode(String intentCode) {
         return Optional.ofNullable(getRouteByIntentCode().get(intentCode));
     }
 
+    /** 懒加载 + double-check：规则文件只读一次，后续请求直接使用不可变缓存。 */
     private Map<String, IntentRouteRule> getRouteByIntentCode() {
         Map<String, IntentRouteRule> snapshot = routeByIntentCode;
         if (snapshot != null) {
@@ -61,6 +68,10 @@ public class IntentRouteRuleService {
         }
     }
 
+    /**
+     * 读取 JSON 数组，转换为 intentCode -> IntentRouteRule 的查找表。
+     * 文件缺失或格式读取失败时返回空表，上层不会构造 v7 Plan，而不是让应用启动失败。
+     */
     private Map<String, IntentRouteRule> loadRoutes() {
         Resource resource = resourceLoader.getResource(properties.getIntentRoutesLocation());
         if (!resource.exists()) {
@@ -86,6 +97,7 @@ public class IntentRouteRuleService {
 
     public record IntentRouteRule(String intentCode, Map<String, Object> metadataFilters) {
 
+        /** 对 filter Map 做防御性不可变拷贝，避免调用方意外污染共享规则缓存。 */
         private IntentRouteRule copy() {
             return new IntentRouteRule(intentCode, Map.copyOf(new LinkedHashMap<>(metadataFilters)));
         }

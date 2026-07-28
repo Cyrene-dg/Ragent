@@ -37,9 +37,13 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Executes the same ordered metadata scopes as Milvus, but uses ES BM25
- * retrieval inside each scope. It deliberately owns policy only; the gateway
- * still owns ES request construction and transport.
+ * ES 关键词通道的分层 Plan 执行器。
+ *
+ * 它和 {@link ProgressiveMilvusPlanRetriever} 消费完全相同的 {@link RetrievalPlan}：
+ * 外层按意图分数处理，内层按 filterLevels 从严格到宽松执行；区别仅在于每一层调用
+ * {@link KeywordEsGateway} 做 BM25 关键词召回，而不是调用 Milvus 做向量召回。
+ *
+ * 本类只编排“查哪一层、何时停止、怎样去重”，ES DSL 构造和 HTTP 通信仍由 Gateway 负责。
  */
 @Slf4j
 @Service
@@ -48,6 +52,11 @@ public class ProgressiveKeywordEsPlanRetriever {
 
     private final KeywordEsGateway keywordEsGateway;
 
+    /**
+     * 按 Plan 渐进执行 ES 检索。
+     * 每个意图最多累计 targetCandidateCount 条；整个 ES 通道最多保留 maxCandidatePool 条。
+     * 对 ANY_HIT 层，只要该层有结果便停止放宽；普通层则继续补足候选数。
+     */
     public ProgressiveKeywordEsResult retrieve(String question,
                                                RetrievalPlan plan,
                                                List<NodeScore> kbIntents) {
@@ -55,14 +64,15 @@ public class ProgressiveKeywordEsPlanRetriever {
             return ProgressiveKeywordEsResult.empty();
         }
 
-        int targetPerIntent = Math.max(1, plan.targetCandidateCount());
-        int maxCandidatePool = Math.max(targetPerIntent, plan.maxCandidatePool());
-        Map<String, NodeScore> nodeByIntentCode = strongestNodeByIntentCode(kbIntents);
-        LinkedHashMap<String, RetrievedChunk> candidates = new LinkedHashMap<>();
-        List<LevelExecution> executions = new ArrayList<>();
+        int targetPerIntent = Math.max(1, plan.targetCandidateCount()); // 单意图在继续放宽前希望累计的候选数
+        int maxCandidatePool = Math.max(targetPerIntent, plan.maxCandidatePool()); // ES 通道内部候选池上限
+        Map<String, NodeScore> nodeByIntentCode = strongestNodeByIntentCode(kbIntents); // intentCode -> 最高分节点
+        LinkedHashMap<String, RetrievedChunk> candidates = new LinkedHashMap<>(); // 按 chunkId 去重的候选池
+        List<LevelExecution> executions = new ArrayList<>(); // 记录每层请求，便于 Trace/日志诊断
         int attemptedSearches = 0;
         int failedSearches = 0;
 
+        // 外层：优先执行分类置信度更高的意图计划
         List<IntentRetrievalPlan> sortedPlans = plan.intentPlans().stream()
                 .sorted(Comparator.comparingDouble(IntentRetrievalPlan::intentScore).reversed())
                 .toList();
@@ -70,6 +80,7 @@ public class ProgressiveKeywordEsPlanRetriever {
             if (candidates.size() >= maxCandidatePool) {
                 break;
             }
+            // ES 以 kbId 限定知识库分区；优先使用 Plan 中已固定的值
             String kbId = kbIdOf(intentPlan, nodeByIntentCode);
             if (StrUtil.isBlank(kbId)) {
                 log.warn("Skip ES metadata plan because its intent has no kbId: intentCode={}", intentPlan.intentCode());
@@ -78,6 +89,7 @@ public class ProgressiveKeywordEsPlanRetriever {
 
             int candidateCountBeforeIntent = candidates.size();
             Set<String> kbIds = Set.of(kbId);
+            // 内层：同一意图的 filterLevels 从严格到宽松逐层执行
             for (RetrievalFilterLevel level : intentPlan.filterLevels()) {
                 if (candidates.size() >= maxCandidatePool) {
                     break;
@@ -87,15 +99,17 @@ public class ProgressiveKeywordEsPlanRetriever {
                     break;
                 }
 
+                // 本层只请求候选池还装得下的数量；Gateway 将 metadataFilters 编译为 ES filter 子句
                 int remainingGlobalCapacity = maxCandidatePool - candidates.size();
                 int requestTopK = Math.min(remainingGlobalCapacity,
                         Math.max(targetPerIntent, targetPerIntent - addedForIntent));
                 attemptedSearches++;
                 try {
+                    // ★ 真正调 ES 做 BM25 关键词检索，带上 kb 分区、topK 和 metadataFilters
                     List<RetrievedChunk> levelChunks = keywordEsGateway.search(
                             question, requestTopK, kbIds, level.metadataFilters());
                     int uniqueBeforeLevel = candidates.size();
-                    mergeByChunkIdentity(candidates, levelChunks, maxCandidatePool);
+                    mergeByChunkIdentity(candidates, levelChunks, maxCandidatePool); // 同一 chunk 只保留分数更高的版本
                     int addedByLevel = candidates.size() - uniqueBeforeLevel;
                     executions.add(new LevelExecution(intentPlan.intentCode(), level.order(), level.name(),
                             level.metadataFilters(), levelChunks == null ? 0 : levelChunks.size(),
@@ -103,6 +117,7 @@ public class ProgressiveKeywordEsPlanRetriever {
                     log.info("Metadata ES level finished: intentCode={}, level={}, filters={}, returned={}, uniqueAdded={}, pooled={}",
                             intentPlan.intentCode(), level.name(), level.metadataFilters(),
                             levelChunks == null ? 0 : levelChunks.size(), addedByLevel, candidates.size());
+                    // 与 Milvus 共用停止语义：精确层命中即停，普通层继续补候选
                     if (ProgressivePlanStopPolicy.shouldStopAfterLevel(level, levelChunks)) {
                         break;
                     }
@@ -120,6 +135,7 @@ public class ProgressiveKeywordEsPlanRetriever {
                 attemptedSearches, failedSearches, candidates.size() >= maxCandidatePool);
     }
 
+    /** 同一个 intentCode 可能有多个评分记录，只保留最高分，用于补全 Plan 未携带的 kbId。 */
     private Map<String, NodeScore> strongestNodeByIntentCode(List<NodeScore> kbIntents) {
         Map<String, NodeScore> result = new HashMap<>();
         if (CollUtil.isEmpty(kbIntents)) {
@@ -135,6 +151,7 @@ public class ProgressiveKeywordEsPlanRetriever {
         return result;
     }
 
+    /** Plan 已冻结 kbId 时不回查；否则兼容旧调用方式，从 NodeScore 补取。 */
     private String kbIdOf(IntentRetrievalPlan intentPlan, Map<String, NodeScore> nodeByIntentCode) {
         if (StrUtil.isNotBlank(intentPlan.kbId())) {
             return intentPlan.kbId().trim();
@@ -144,6 +161,10 @@ public class ProgressiveKeywordEsPlanRetriever {
         return node == null ? null : StrUtil.trim(node.getKbId());
     }
 
+    /**
+     * 合并本层结果到 ES 候选池：优先使用 chunkId，缺失时才以文本 hash 兜底；
+     * 同 key 重复时保留 ES 分数更高的块，不因重复而占用候选池容量。
+     */
     private void mergeByChunkIdentity(Map<String, RetrievedChunk> candidates,
                                       List<RetrievedChunk> chunks,
                                       int maxCandidatePool) {

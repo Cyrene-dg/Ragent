@@ -78,6 +78,7 @@ public class VectorGlobalSearchChannel implements SearchChannel {
         if (!properties.getChannels().getVectorGlobal().isEnabled()) {
             return false;
         }
+        // v7 Plan 已覆盖检索范围时，不再允许跨全部知识库的向量兜底绕过元数据边界。
         if (metadataRetrievalProperties.isEnabled()
                 && metadataRetrievalProperties.isExecutionEnabled()
                 && context.getRetrievalPlan() != null
