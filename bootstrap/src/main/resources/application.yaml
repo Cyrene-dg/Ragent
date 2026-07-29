@@ -146,6 +146,28 @@ rag:
     max-rerank-candidates: 80
     rrf-rank-constant: 60
 
+  knowledge-base-routing:
+    enabled: true
+    # Only used after deterministic keyword/entity signals cannot choose a corpus.
+    llm-fallback-enabled: true
+    profiles:
+      - id: genshin-v7
+        kb-id: 2080272025011851264
+        description: "原神游戏资料：角色、武器、圣遗物、任务、命座与元素战技。"
+        route-keywords: ["原神", "元素战技", "元素爆发", "命座", "圣遗物", "提瓦特", "旅行者"]
+        intent-routes-location: file:resources/genshin_seed_v7/config/intent_routes.json
+        entity-catalog-location: file:resources/genshin_seed_v7/config/entity_catalog.jsonl
+        entity-fallback-collection-name: genshinroutingv7
+        element-facet-enabled: true
+      - id: digital-store-v1
+        kb-id: 2082255933781876736
+        description: "消费电子商品资料：手机、平板、笔记本、显示器、耳机、路由器、充电设备和商品规格。"
+        route-keywords: ["手机", "平板", "笔记本", "电脑", "显示器", "耳机", "音箱", "路由器", "充电器", "充电宝", "移动电源", "智能手表", "扫地机器人", "空气净化器", "电子产品", "数码", "屏幕参数", "商品参数", "型号", "接口", "小米", "红米", "苹果", "iPhone", "MacBook", "三星", "Galaxy", "华为", "OPPO", "vivo", "戴尔", "Dell", "惠普", "HP", "联想", "ThinkPad", "Canon", "索尼", "Sony", "瓦", "w"]
+        intent-routes-location: file:resources/digital_store_v1/config/intent_routes.json
+        entity-catalog-location: file:external_data/digital_store_v1/catalog_rag_seed_v1/config/entity_catalog.jsonl
+        entity-fallback-collection-name: digitalstorev1
+        element-facet-enabled: false
+
   trace:
     enabled: true
     max-error-length: 1000

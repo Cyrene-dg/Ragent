@@ -44,3 +44,6 @@ dist/
 
 ### Eval artifacts ###
 tests/eval_rag/artifacts/
+
+### Local source data (licensed downloads and generated raw datasets) ###
+external_data/

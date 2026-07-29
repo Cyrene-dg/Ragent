@@ -65,7 +65,9 @@ public class KeywordEsGateway {
     /** Fields shared with Milvus that are safe and useful as ES exact filters. */
     private static final List<String> ROUTING_METADATA_FIELDS = List.of(
             "schema_version", "source_version", "source_document", "document_title",
-            "category", "doc_type", "entity_type", "entity_id", "section_path", "language", "element"
+            "category", "product_kind", "store_category", "doc_type", "entity_type", "entity_id",
+            "brand", "product_code", "compatible_brand_names", "compatible_device_ids",
+            "section_path", "language", "element"
     );
 
     private final ObjectMapper objectMapper;

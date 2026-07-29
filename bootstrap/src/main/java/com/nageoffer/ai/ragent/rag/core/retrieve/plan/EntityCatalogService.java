@@ -20,10 +20,13 @@ package com.nageoffer.ai.ragent.rag.core.retrieve.plan; // 检索计划子包
 import com.fasterxml.jackson.annotation.JsonProperty; // JSON 字段名映射（Java 用驼峰，JSON 用下划线）
 import com.fasterxml.jackson.databind.ObjectMapper;    // Jackson JSON 解析器
 import com.nageoffer.ai.ragent.rag.config.MetadataRetrievalProperties; // 实体目录配置（路径等）
+import com.nageoffer.ai.ragent.rag.config.KnowledgeBaseRoutingProperties;
+import com.nageoffer.ai.ragent.rag.core.routing.KnowledgeBaseProfileRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader; // Spring 资源加载器，支持 classpath:/ 等前缀
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -32,6 +35,8 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets; // UTF-8 编码
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * v7 实体目录加载服务。
@@ -43,7 +48,7 @@ import java.util.List;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class EntityCatalogService {
 
     private final ObjectMapper objectMapper;         // Jackson 解析器，反序列化 JSON 行
@@ -55,7 +60,17 @@ public class EntityCatalogService {
      * 线程 A 写完 catalog 后，线程 B 能立刻看到，不会读到 null 或未初始化状态。
      * 用 List<EntityCatalogEntry> 而不是原始类型，因为 catalog 一旦加载完成内容不变。
      */
+    private final KnowledgeBaseProfileRegistry profileRegistry;
     private volatile List<EntityCatalogEntry> catalog;
+    private final Map<String, List<EntityCatalogEntry>> catalogByKbId = new ConcurrentHashMap<>();
+
+    /** 保留给旧测试和单知识库调用方的兼容构造器。 */
+    public EntityCatalogService(ObjectMapper objectMapper,
+                                ResourceLoader resourceLoader,
+                                MetadataRetrievalProperties properties) {
+        this(objectMapper, resourceLoader, properties,
+                new KnowledgeBaseProfileRegistry(new KnowledgeBaseRoutingProperties()));
+    }
 
     /**
      * 获取实体目录列表（懒加载 + double-checked locking）。
@@ -77,6 +92,14 @@ public class EntityCatalogService {
         }
     }
 
+    /** Load the catalog of an already routed knowledge base. */
+    public List<EntityCatalogEntry> getCatalog(String kbId) {
+        return profileRegistry.findByKbId(kbId)
+                .map(profile -> catalogByKbId.computeIfAbsent(profile.getKbId(),
+                        ignored -> loadCatalog(profile.getEntityCatalogLocation())))
+                .orElseGet(this::getCatalog);
+    }
+
     /**
      * 从 JSONL 文件加载实体目录。
      * JSONL 格式：每行一个 JSON 对象，字段如：
@@ -85,10 +108,14 @@ public class EntityCatalogService {
      * 容错：文件不存在或解析失败不抛异常，返回空列表，让上层降级为不按实体过滤。
      */
     private List<EntityCatalogEntry> loadCatalog() {
+        return loadCatalog(properties.getEntityCatalogLocation());
+    }
+
+    private List<EntityCatalogEntry> loadCatalog(String location) {
         // Spring ResourceLoader 支持 classpath:、file: 等多种前缀
-        Resource resource = resourceLoader.getResource(properties.getEntityCatalogLocation());
+        Resource resource = resourceLoader.getResource(location);
         if (!resource.exists()) {
-            log.warn("Metadata entity catalog is unavailable: {}", properties.getEntityCatalogLocation());
+            log.warn("Metadata entity catalog is unavailable: {}", location);
             return List.of();
         }
 
@@ -108,7 +135,7 @@ public class EntityCatalogService {
             // 不可变拷贝，防止外部意外修改
             return List.copyOf(entries);
         } catch (IOException exception) {
-            log.warn("Failed to load metadata entity catalog: {}", properties.getEntityCatalogLocation(), exception);
+            log.warn("Failed to load metadata entity catalog: {}", location, exception);
             return List.of(); // 加载失败不阻服务
         }
     }

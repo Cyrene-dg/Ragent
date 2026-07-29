@@ -25,6 +25,7 @@ import lombok.Data;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 检索上下文
@@ -57,6 +58,10 @@ public class SearchContext {
 
     /** Metadata-scoped retrieval policy for a routed knowledge base, when available. */
     private RetrievalPlan retrievalPlan;
+
+    /** Explicit knowledge-base boundary chosen before intent classification. */
+    @Builder.Default
+    private Set<String> routedKbIds = Set.of();
 
     /**
      * 期望返回的结果数量

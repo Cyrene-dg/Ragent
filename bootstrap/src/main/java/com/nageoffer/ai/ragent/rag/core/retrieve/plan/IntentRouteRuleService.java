@@ -20,10 +20,13 @@ package com.nageoffer.ai.ragent.rag.core.retrieve.plan;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nageoffer.ai.ragent.rag.config.MetadataRetrievalProperties;
+import com.nageoffer.ai.ragent.rag.config.KnowledgeBaseRoutingProperties;
+import com.nageoffer.ai.ragent.rag.core.routing.KnowledgeBaseProfileRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -31,6 +34,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 意图路由规则加载器：把叶子意图编码映射为声明式元数据条件。
@@ -40,18 +44,36 @@ import java.util.Optional;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class IntentRouteRuleService {
 
     private final ObjectMapper objectMapper;
     private final ResourceLoader resourceLoader;
     private final MetadataRetrievalProperties properties;
+    private final KnowledgeBaseProfileRegistry profileRegistry;
 
     private volatile Map<String, IntentRouteRule> routeByIntentCode;
+    private final Map<String, Map<String, IntentRouteRule>> routeByKbId = new ConcurrentHashMap<>();
+
+    /** 保留给旧测试和单知识库调用方的兼容构造器。 */
+    public IntentRouteRuleService(ObjectMapper objectMapper,
+                                  ResourceLoader resourceLoader,
+                                  MetadataRetrievalProperties properties) {
+        this(objectMapper, resourceLoader, properties,
+                new KnowledgeBaseProfileRegistry(new KnowledgeBaseRoutingProperties()));
+    }
 
     /** 按 LLM 最终选择的叶子 intentCode 查询对应的元数据路由规则。 */
     public Optional<IntentRouteRule> findByIntentCode(String intentCode) {
         return Optional.ofNullable(getRouteByIntentCode().get(intentCode));
+    }
+
+    public Optional<IntentRouteRule> findByIntentCode(String kbId, String intentCode) {
+        return profileRegistry.findByKbId(kbId)
+                .map(profile -> routeByKbId.computeIfAbsent(profile.getKbId(),
+                        ignored -> loadRoutes(profile.getIntentRoutesLocation())).get(intentCode))
+                .map(Optional::ofNullable)
+                .orElseGet(() -> findByIntentCode(intentCode));
     }
 
     /** 懒加载 + double-check：规则文件只读一次，后续请求直接使用不可变缓存。 */
@@ -73,9 +95,13 @@ public class IntentRouteRuleService {
      * 文件缺失或格式读取失败时返回空表，上层不会构造 v7 Plan，而不是让应用启动失败。
      */
     private Map<String, IntentRouteRule> loadRoutes() {
-        Resource resource = resourceLoader.getResource(properties.getIntentRoutesLocation());
+        return loadRoutes(properties.getIntentRoutesLocation());
+    }
+
+    private Map<String, IntentRouteRule> loadRoutes(String location) {
+        Resource resource = resourceLoader.getResource(location);
         if (!resource.exists()) {
-            log.warn("Metadata intent route rules are unavailable: {}", properties.getIntentRoutesLocation());
+            log.warn("Metadata intent route rules are unavailable: {}", location);
             return Map.of();
         }
         try (var inputStream = resource.getInputStream()) {
@@ -90,7 +116,7 @@ public class IntentRouteRuleService {
             log.info("Loaded metadata intent route rules: entries={}, resource={}", routes.size(), resource.getDescription());
             return Map.copyOf(routes);
         } catch (IOException exception) {
-            log.warn("Failed to load metadata intent route rules: {}", properties.getIntentRoutesLocation(), exception);
+            log.warn("Failed to load metadata intent route rules: {}", location, exception);
             return Map.of();
         }
     }

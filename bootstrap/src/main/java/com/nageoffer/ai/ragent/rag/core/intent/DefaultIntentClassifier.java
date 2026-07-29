@@ -159,8 +159,23 @@ public class DefaultIntentClassifier implements IntentClassifier, IntentNodeRegi
      */
     @Override
     public List<NodeScore> classifyTargets(String question, EntityResolution entityHint) {
+        return classifyTargets(question, entityHint, null);
+    }
+
+    @Override
+    public List<NodeScore> classifyTargets(String question, EntityResolution entityHint, String kbId) {
         // 每次优先从 Redis 缓存读取意图树；节点更新何时生效取决于缓存清理或过期策略
         IntentTreeData data = loadIntentTreeData();
+        if (kbId != null && !kbId.isBlank()) {
+            List<IntentNode> scopedLeafNodes = data.leafNodes.stream()
+                    .filter(node -> kbId.equals(node.getKbId()))
+                    .toList();
+            if (scopedLeafNodes.isEmpty()) {
+                log.warn("No leaf intents found for routed knowledge base: {}", kbId);
+                return List.of();
+            }
+            data = new IntentTreeData(data.allNodes, scopedLeafNodes, data.id2Node);
+        }
 
         // 两阶段策略：叶子太多时先用 HybridRecall 粗筛再精判
         int totalLeafCount = data.leafNodes.size();

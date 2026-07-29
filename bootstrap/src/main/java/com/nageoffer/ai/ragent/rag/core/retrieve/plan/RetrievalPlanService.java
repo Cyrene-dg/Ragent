@@ -118,7 +118,7 @@ public class RetrievalPlanService {
         for (NodeScore nodeScore : strongestIntentByCode.values()) {
             IntentNode node = nodeScore.getNode();
             // 查路由表：该意图编码对应的 metadataFilters 是什么
-            intentRouteRuleService.findByIntentCode(node.getId()).ifPresent(rule -> {
+            intentRouteRuleService.findByIntentCode(node.getKbId(), node.getId()).ifPresent(rule -> {
                 // 2a. 从路由规则取基础 filter，如果 category 是 character 则解析 element
                 Map<String, Object> routeFilters = enrichWithElementFacet(
                         question, rule.metadataFilters(), elementFacetEnabled);
@@ -128,7 +128,7 @@ public class RetrievalPlanService {
                 //     不兼容的话用路由的 category 重新做一次实体匹配
                 EntityResolution compatibleEntity = isCompatible(entityResolution, routeFilters)
                         ? entityResolution
-                        : entityResolver.resolve(question, categoriesOf(routeFilters));
+                        : entityResolver.resolve(question, categoriesOf(routeFilters), node.getKbId());
 
                 // 2c. 组装 IntentRetrievalPlan + 根据 routeFilters+entity 构建分层 filter
                 intentPlans.add(new IntentRetrievalPlan(

@@ -51,6 +51,10 @@ public class EntityResolver {
         return resolve(question, List.of()); // 空列表 = 不做 category 过滤
     }
 
+    public EntityResolution resolveAny(String question, String kbId) {
+        return resolve(question, List.of(), kbId);
+    }
+
     /**
      * 核心匹配方法。
      *
@@ -65,6 +69,10 @@ public class EntityResolver {
      * @param allowedCategories 限定只在这些 category 中搜索，空列表 = 全量匹配
      */
     public EntityResolution resolve(String question, Collection<String> allowedCategories) {
+        return resolve(question, allowedCategories, null);
+    }
+
+    public EntityResolution resolve(String question, Collection<String> allowedCategories, String kbId) {
         // 预处理：去空格、转小写（"神里 绫华" -> "神里绫华"）
         String normalizedQuestion = normalize(question);
         if (normalizedQuestion.isBlank()) {
@@ -81,7 +89,7 @@ public class EntityResolver {
         Map<String, Candidate> bestByEntity = new LinkedHashMap<>();
 
         // 遍历实体目录中每一条
-        for (EntityCatalogService.EntityCatalogEntry entry : entityCatalogService.getCatalog()) {
+        for (EntityCatalogService.EntityCatalogEntry entry : entityCatalogService.getCatalog(kbId)) {
             // 如果指定了 category 过滤，跳过不匹配的实体
             if (!normalizedCategories.isEmpty() && !normalizedCategories.contains(normalize(entry.category()))) {
                 continue;

@@ -1,0 +1,15 @@
+{
+  "purpose": "Ten-sheet parser and authenticated-download smoke test. These are Xiaomi-compatible accessory sheets, not the final store assortment.",
+  "products": [
+    {"icecat_id": "77079529", "label": "Cellularline car charger compatible with Xiaomi phones", "category_hint": "charger"},
+    {"icecat_id": "101364912", "label": "Cellularline multi-port car charger compatible with Xiaomi phones", "category_hint": "charger"},
+    {"icecat_id": "93980280", "label": "Cellularline desktop USB-C charger compatible with Xiaomi phones", "category_hint": "charger"},
+    {"icecat_id": "77014320", "label": "Cellularline AC fast charger compatible with Xiaomi phones", "category_hint": "charger"},
+    {"icecat_id": "140052397", "label": "Cellularline Xiaomi 17 phone case", "category_hint": "phone_case"},
+    {"icecat_id": "141993088", "label": "Cellularline Xiaomi Redmi Note 15 Pro phone case", "category_hint": "phone_case"},
+    {"icecat_id": "140052393", "label": "Cellularline Xiaomi Redmi Note 15 Pro 5G phone case", "category_hint": "phone_case"},
+    {"icecat_id": "140052405", "label": "Cellularline Xiaomi 17 screen protector", "category_hint": "screen_protector"},
+    {"icecat_id": "99771126", "label": "Cellularline Xiaomi Redmi Note 11 phone case", "category_hint": "phone_case"},
+    {"icecat_id": "13214266", "label": "Official Icecat XML format control sample", "category_hint": "format_control"}
+  ]
+}

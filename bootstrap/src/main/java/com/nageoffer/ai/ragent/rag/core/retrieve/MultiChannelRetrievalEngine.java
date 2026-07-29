@@ -34,6 +34,7 @@ import org.springframework.stereotype.Service;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
@@ -235,6 +236,11 @@ public class MultiChannelRetrievalEngine {
                 .intents(subIntents)
                 .topK(topK)
                 .retrievalPlan(retrievalPlan)
+                .routedKbIds(subIntents == null ? Set.of() : subIntents.stream()
+                        .map(each -> each.knowledgeBaseRoute() == null ? null : each.knowledgeBaseRoute().kbId())
+                        .filter(Objects::nonNull)
+                        .filter(kbId -> !kbId.isBlank())
+                        .collect(java.util.stream.Collectors.toUnmodifiableSet()))
                 .build();
     }
 }

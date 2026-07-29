@@ -48,6 +48,10 @@ public interface IntentClassifier {
         return classifyTargets(question);
     }
 
+    default List<NodeScore> classifyTargets(String question, EntityResolution entityHint, String kbId) {
+        return classifyTargets(question, entityHint);
+    }
+
     /**
      * 取前 topN 个且 score >= minScore 的分类
      *

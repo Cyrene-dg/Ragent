@@ -145,7 +145,13 @@ public class KeywordEsSearchChannel implements SearchChannel {
     }
 
     private Set<String> extractKbIds(SearchContext context) {
-        if (context == null || CollUtil.isEmpty(context.getIntents())) {
+        if (context == null) {
+            return Set.of();
+        }
+        if (context.getRoutedKbIds() != null && !context.getRoutedKbIds().isEmpty()) {
+            return context.getRoutedKbIds();
+        }
+        if (CollUtil.isEmpty(context.getIntents())) {
             return Set.of();
         }
         return context.getIntents().stream()

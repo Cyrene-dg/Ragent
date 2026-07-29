@@ -27,6 +27,8 @@ import com.nageoffer.ai.ragent.framework.trace.RagTraceNode;
 import com.nageoffer.ai.ragent.rag.core.rewrite.RewriteResult;
 import com.nageoffer.ai.ragent.rag.core.retrieve.plan.EntityResolution;
 import com.nageoffer.ai.ragent.rag.core.retrieve.plan.EntityResolver;
+import com.nageoffer.ai.ragent.rag.core.routing.KnowledgeBaseRoute;
+import com.nageoffer.ai.ragent.rag.core.routing.KnowledgeBaseRoutingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -51,6 +53,7 @@ public class IntentResolver {
     @Qualifier("intentClassifyThreadPoolExecutor")
     private final Executor intentClassifyExecutor;
     private final EntityResolver entityResolver;
+    private final KnowledgeBaseRoutingService knowledgeBaseRoutingService;
 
     @RagTraceNode(name = "intent-resolve", type = "INTENT")
     //对改写结果里的每个子问题并发做意图分类，并把总意图数裁剪到上限内。
@@ -103,17 +106,21 @@ public class IntentResolver {
 //    对单个问题调用分类器做意图识别，并按最低分阈值和最大数量做初步过滤。
     //输入一个问题字符串，输出这个问题对应的一组候选意图 NodeScore 列表。
     private SubQuestionIntent classifySubQuestion(String question) {
-        EntityResolution entityHint = entityResolver.resolveAny(question);
-        List<NodeScore> scores = classifyIntents(question, entityHint);
-        return new SubQuestionIntent(question, scores, entityHint);
+        KnowledgeBaseRoute route = knowledgeBaseRoutingService.route(question);
+        EntityResolution entityHint = route.isResolved()
+                ? entityResolver.resolveAny(question, route.kbId())
+                : entityResolver.resolveAny(question);
+        List<NodeScore> scores = classifyIntents(question, entityHint, route);
+        return new SubQuestionIntent(question, scores, entityHint, route);
     }
 
-    private List<NodeScore> classifyIntents(String question, EntityResolution entityHint) {
+    private List<NodeScore> classifyIntents(String question, EntityResolution entityHint, KnowledgeBaseRoute route) {
         //把当前问题交给意图分类器，得到原始的候选意图列表。
 
         //这里直接列出这个方法的流程，会先加载最新意图树，用叶子节点构造分类提示词，再把当前问题交给大模型，让模型返回若干“意图节点 id + 分数”的 JSON 结果；程序随后解析这些结果、校验节点合法性、映射回真实 IntentNode 并封装成 NodeScore 列表，按分数降序返回。
         //整个意图树都在 Redis 里缓存,根节点是值
-        List<NodeScore> scores = intentClassifier.classifyTargets(question, entityHint);
+        List<NodeScore> scores = intentClassifier.classifyTargets(question, entityHint,
+                route.isResolved() ? route.kbId() : null);
         //对分类器返回的原始候选意图列表，再做一轮筛选处理，然后直接返回。
         return scores.stream()
                 //把分数低于最低阈值的意图过滤掉。
@@ -264,7 +271,8 @@ public class IntentResolver {
         for (int i = 0; i < originalSubIntents.size(); i++) {
             SubQuestionIntent original = originalSubIntents.get(i);
             List<NodeScore> retained = groupedByIndex.getOrDefault(i, List.of());
-            result.add(new SubQuestionIntent(original.subQuestion(), retained));
+            result.add(new SubQuestionIntent(original.subQuestion(), retained,
+                    original.entityResolution(), original.knowledgeBaseRoute()));
         }
         return result;
     }
