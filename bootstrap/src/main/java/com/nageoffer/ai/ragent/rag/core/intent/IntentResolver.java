@@ -36,6 +36,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
@@ -119,8 +120,15 @@ public class IntentResolver {
 
         //这里直接列出这个方法的流程，会先加载最新意图树，用叶子节点构造分类提示词，再把当前问题交给大模型，让模型返回若干“意图节点 id + 分数”的 JSON 结果；程序随后解析这些结果、校验节点合法性、映射回真实 IntentNode 并封装成 NodeScore 列表，按分数降序返回。
         //整个意图树都在 Redis 里缓存,根节点是值
-        List<NodeScore> scores = intentClassifier.classifyTargets(question, entityHint,
-                route.isResolved() ? route.kbId() : null);
+        Set<String> excludedKbIds = route.isOutOfDomain()
+                ? knowledgeBaseRoutingService.managedKbIds()
+                : Set.of();
+        List<NodeScore> scores = intentClassifier.classifyTargets(
+                question,
+                entityHint,
+                route.isResolved() ? route.kbId() : null,
+                excludedKbIds
+        );
         //对分类器返回的原始候选意图列表，再做一轮筛选处理，然后直接返回。
         return scores.stream()
                 //把分数低于最低阈值的意图过滤掉。

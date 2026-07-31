@@ -352,7 +352,7 @@ def metadata_contract() -> dict[str, Any]:
             "source_document": "可追溯的逻辑源文档",
             "language": "固定 zh-CN",
         },
-        "boundary": "本契约只定义离线数据。当前主项目尚未添加数码店铺的检索 Plan 或顶层知识库路由。",
+        "boundary": "本契约定义离线元数据；主项目已接入数码店铺顶层路由、实体识别、检索 Plan 与分层放宽。兼容设备数组暂不作为强过滤条件。",
     }
 
 

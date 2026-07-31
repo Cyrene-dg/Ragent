@@ -113,7 +113,7 @@ public class VectorGlobalSearchChannel implements SearchChannel {
         long startTime = System.currentTimeMillis();
         try {
             log.info("执行向量全局检索，问题：{}", context.getMainQuestion());
-            List<RetrievalTarget> targets = getKBCollections(context.getRoutedKbIds());
+            List<RetrievalTarget> targets = getKBCollections(context.getRoutedKbIds(), context.getExcludedKbIds());
             if (targets.isEmpty()) {
                 log.warn("未找到任何 KB collection，跳过全局检索");
                 return SearchChannelResult.builder()
@@ -153,7 +153,7 @@ public class VectorGlobalSearchChannel implements SearchChannel {
         }
     }
 
-    private List<RetrievalTarget> getKBCollections(Set<String> routedKbIds) {
+    private List<RetrievalTarget> getKBCollections(Set<String> routedKbIds, Set<String> excludedKbIds) {
         Set<String> seen = new HashSet<>();
         List<RetrievalTarget> targets = new ArrayList<>();
         var query = Wrappers.lambdaQuery(KnowledgeBaseDO.class)
@@ -161,6 +161,9 @@ public class VectorGlobalSearchChannel implements SearchChannel {
                 .eq(KnowledgeBaseDO::getDeleted, 0);
         if (routedKbIds != null && !routedKbIds.isEmpty()) {
             query.in(KnowledgeBaseDO::getId, routedKbIds);
+        }
+        if (excludedKbIds != null && !excludedKbIds.isEmpty()) {
+            query.notIn(KnowledgeBaseDO::getId, excludedKbIds);
         }
         List<KnowledgeBaseDO> kbList = knowledgeBaseMapper.selectList(query);
         for (KnowledgeBaseDO kb : kbList) {

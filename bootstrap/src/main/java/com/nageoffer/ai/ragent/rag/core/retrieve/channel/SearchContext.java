@@ -63,6 +63,10 @@ public class SearchContext {
     @Builder.Default
     private Set<String> routedKbIds = Set.of();
 
+    /** Knowledge bases that an explicit out-of-domain decision must not search. */
+    @Builder.Default
+    private Set<String> excludedKbIds = Set.of();
+
     /**
      * 期望返回的结果数量
      */

@@ -31,6 +31,8 @@ import org.springframework.util.StringUtils;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Fast corpus router.  Keyword/entity matches handle normal traffic; a tiny
@@ -40,6 +42,15 @@ import java.util.Locale;
 @Service
 @RequiredArgsConstructor
 public class KnowledgeBaseRoutingService {
+
+    /**
+     * These words describe a field or operation but not a corpus.  Treating one
+     * of them as a deterministic route signal would send questions such as
+     * "这个接口为什么返回 500" to the product corpus before the LLM can reject it.
+     */
+    private static final Set<String> GENERIC_ROUTE_KEYWORDS = Set.of(
+            "参数", "型号", "接口", "技能", "流程", "状态"
+    );
 
     private final KnowledgeBaseRoutingProperties properties;
     private final KnowledgeBaseProfileRegistry profileRegistry;
@@ -73,7 +84,9 @@ public class KnowledgeBaseRoutingService {
         int keywordHits = 0;
         for (String keyword : profile.getRouteKeywords() == null ? List.<String>of() : profile.getRouteKeywords()) {
             String normalizedKeyword = normalize(keyword);
-            if (normalizedKeyword.length() >= 2 && normalizedQuestion.contains(normalizedKeyword)) {
+            if (normalizedKeyword.length() >= 2
+                    && !GENERIC_ROUTE_KEYWORDS.contains(normalizedKeyword)
+                    && normalizedQuestion.contains(normalizedKeyword)) {
                 keywordHits++;
             }
         }
@@ -83,20 +96,27 @@ public class KnowledgeBaseRoutingService {
 
     private KnowledgeBaseRoute resolveByLlm(String question, List<Candidate> candidates) {
         String choices = candidates.stream().map(candidate -> "- id=" + candidate.profile().getId()
-                        + ", description=" + candidate.profile().getDescription())
+                        + ", description=" + candidate.profile().getDescription()
+                        + ", identifyingKeywords=" + candidate.profile().getRouteKeywords())
                 .reduce("", (left, right) -> left + "\n" + right);
-        String prompt = "You route a user question to one knowledge base. Return only one profile id from the choices, or UNKNOWN."
+        String prompt = "You are a conservative router for managed knowledge bases. "
+                + "Deterministic entity and keyword routing could not decide this question, so UNKNOWN is the default. "
+                + "Choose a profile only when the question contains clear, corpus-specific evidence. "
+                + "Do not guess the nearest profile from generic words such as character, skill, parameter, process, or status. "
+                + "A character, product, or concept from another or unspecified domain is UNKNOWN, even when it asks for a data type stored by one profile. "
+                + "For example, a character from a different game must not be routed to a Genshin profile merely because the question asks about skills. "
+                + "Return exactly one profile id from the choices, or UNKNOWN when evidence is absent or uncertain."
                 + "\nChoices:" + choices + "\nQuestion: " + question;
         try {
             String answer = llmService.chat(ChatRequest.builder()
                     .messages(List.of(ChatMessage.system(prompt), ChatMessage.user(question)))
                     .temperature(0.0D).topP(0.1D).thinking(false).build());
-            String normalized = normalize(answer);
+            String normalized = normalizeRouteAnswer(answer);
             return candidates.stream()
-                    .filter(candidate -> normalized.contains(normalize(candidate.profile().getId())))
+                    .filter(candidate -> normalized.equals(normalize(candidate.profile().getId())))
                     .findFirst()
                     .map(candidate -> resolved(candidate, "llm", 0.60D))
-                    .orElseGet(KnowledgeBaseRoute::unresolved);
+                    .orElseGet(KnowledgeBaseRoute::outOfDomain);
         } catch (Exception exception) {
             log.warn("Knowledge-base LLM routing failed; preserve legacy global intent flow", exception);
             return KnowledgeBaseRoute.unresolved();
@@ -111,6 +131,22 @@ public class KnowledgeBaseRoutingService {
         log.info("knowledge-base route strategy={}, profile={}, kbId={}, confidence={}",
                 route.strategy(), route.profileId(), route.kbId(), route.confidence());
         return route;
+    }
+
+    /** Managed corpora are excluded only after an explicit UNKNOWN decision, never after an LLM failure. */
+    public Set<String> managedKbIds() {
+        return profileRegistry.enabledProfiles().stream()
+                .map(KnowledgeBaseRoutingProperties.Profile::getKbId)
+                .filter(StringUtils::hasText)
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    private static String normalizeRouteAnswer(String value) {
+        if (value == null) {
+            return "";
+        }
+        String firstLine = value.strip().lines().findFirst().orElse("").trim();
+        return normalize(firstLine.replace("`", "").replace("\"", "").replace("'", ""));
     }
 
     private static String normalize(String value) {

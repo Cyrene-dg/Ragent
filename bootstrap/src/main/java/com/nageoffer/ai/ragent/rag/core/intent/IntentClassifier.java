@@ -20,6 +20,7 @@ package com.nageoffer.ai.ragent.rag.core.intent;
 import com.nageoffer.ai.ragent.rag.core.retrieve.plan.EntityResolution;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * 意图分类器接口
@@ -50,6 +51,14 @@ public interface IntentClassifier {
 
     default List<NodeScore> classifyTargets(String question, EntityResolution entityHint, String kbId) {
         return classifyTargets(question, entityHint);
+    }
+
+    /**
+     * Classifies within one routed corpus, or outside corpora explicitly rejected by the top-level router.
+     */
+    default List<NodeScore> classifyTargets(String question, EntityResolution entityHint, String kbId,
+                                            Set<String> excludedKbIds) {
+        return classifyTargets(question, entityHint, kbId);
     }
 
     /**

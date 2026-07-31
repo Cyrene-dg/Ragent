@@ -83,7 +83,7 @@ public class KeywordEsGateway {
     }
 
     public List<RetrievedChunk> search(String query, int size, Set<String> kbIds) {
-        return search(query, size, kbIds, Map.of());
+        return search(query, size, kbIds, Set.of(), Map.of());
     }
 
     /**
@@ -93,6 +93,14 @@ public class KeywordEsGateway {
     public List<RetrievedChunk> search(String query,
                                        int size,
                                        Set<String> kbIds,
+                                       Map<String, Object> metadataFilters) {
+        return search(query, size, kbIds, Set.of(), metadataFilters);
+    }
+
+    public List<RetrievedChunk> search(String query,
+                                       int size,
+                                       Set<String> kbIds,
+                                       Set<String> excludedKbIds,
                                        Map<String, Object> metadataFilters) {
         if (!available() || !StringUtils.hasText(query) || size <= 0) {
             return List.of();
@@ -141,6 +149,13 @@ public class KeywordEsGateway {
                         .putObject("terms")
                         .putArray("kb_id");
                 kbIds.forEach(values::add);
+            }
+            if (excludedKbIds != null && !excludedKbIds.isEmpty()) {
+                ArrayNode values = queryNode.putArray("must_not")
+                        .addObject()
+                        .putObject("terms")
+                        .putArray("kb_id");
+                excludedKbIds.forEach(values::add);
             }
             appendMetadataFilters(filter, metadataFilters);
 

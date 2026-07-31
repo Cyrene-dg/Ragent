@@ -25,6 +25,7 @@ import com.nageoffer.ai.ragent.rag.core.retrieve.channel.SearchChannelResult;
 import com.nageoffer.ai.ragent.rag.core.retrieve.channel.SearchContext;
 import com.nageoffer.ai.ragent.rag.core.retrieve.postprocessor.SearchResultPostProcessor;
 import com.nageoffer.ai.ragent.rag.core.retrieve.plan.RetrievalPlan;
+import com.nageoffer.ai.ragent.rag.core.routing.KnowledgeBaseRoutingService;
 import com.nageoffer.ai.ragent.rag.dto.SubQuestionIntent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +55,7 @@ public class MultiChannelRetrievalEngine {
 
     private final List<SearchChannel> searchChannels;
     private final List<SearchResultPostProcessor> postProcessors;
+    private final KnowledgeBaseRoutingService knowledgeBaseRoutingService;
     @Qualifier("ragRetrievalThreadPoolExecutor")
     private final Executor ragRetrievalExecutor;
 
@@ -241,6 +243,25 @@ public class MultiChannelRetrievalEngine {
                         .filter(Objects::nonNull)
                         .filter(kbId -> !kbId.isBlank())
                         .collect(java.util.stream.Collectors.toUnmodifiableSet()))
+                .excludedKbIds(resolveExcludedKbIds(subIntents))
                 .build();
+    }
+
+    private Set<String> resolveExcludedKbIds(List<SubQuestionIntent> subIntents) {
+        if (subIntents == null || subIntents.isEmpty()) {
+            return Set.of();
+        }
+        boolean hasResolvedRoute = subIntents.stream()
+                .map(SubQuestionIntent::knowledgeBaseRoute)
+                .filter(Objects::nonNull)
+                .anyMatch(route -> route.isResolved());
+        if (hasResolvedRoute) {
+            return Set.of();
+        }
+        boolean explicitlyOutOfDomain = subIntents.stream()
+                .map(SubQuestionIntent::knowledgeBaseRoute)
+                .filter(Objects::nonNull)
+                .anyMatch(route -> route.isOutOfDomain());
+        return explicitlyOutOfDomain ? knowledgeBaseRoutingService.managedKbIds() : Set.of();
     }
 }

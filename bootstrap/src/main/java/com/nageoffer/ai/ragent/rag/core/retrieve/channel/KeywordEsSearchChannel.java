@@ -111,7 +111,8 @@ public class KeywordEsSearchChannel implements SearchChannel {
             int topKMultiplier = Math.max(1, properties.getTopKMultiplier());
             int recallSize = Math.max(1, context.getTopK() * topKMultiplier);
 
-            List<RetrievedChunk> chunks = keywordEsGateway.search(question, recallSize, kbIds);
+            List<RetrievedChunk> chunks = keywordEsGateway.search(
+                    question, recallSize, kbIds, context.getExcludedKbIds(), java.util.Map.of());
             long latency = System.currentTimeMillis() - startTime;
 
             log.info("ES 关键词检索完成, chunks={}, kbFilters={}, latencyMs={}",

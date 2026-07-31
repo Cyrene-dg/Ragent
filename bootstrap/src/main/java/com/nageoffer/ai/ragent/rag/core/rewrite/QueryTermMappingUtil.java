@@ -25,7 +25,9 @@ public class QueryTermMappingUtil {
      * - 如果当前位置本身已经是 targetTerm 起始（例如文本中已经是“平安保司”），则不重复替换
      */
     public static String applyMapping(String text, String sourceTerm, String targetTerm) {
-        if (text == null || text.isEmpty() || sourceTerm == null || sourceTerm.isEmpty()) {
+        if (text == null || text.isEmpty()
+                || sourceTerm == null || sourceTerm.isEmpty()
+                || targetTerm == null || targetTerm.isEmpty()) {
             return text;
         }
 
@@ -33,7 +35,6 @@ public class QueryTermMappingUtil {
         int idx = 0;
         int len = text.length();
         int sourceLen = sourceTerm.length();
-        int targetLen = targetTerm.length();
 
         while (idx < len) {
             int hit = text.indexOf(sourceTerm, idx);
@@ -46,16 +47,14 @@ public class QueryTermMappingUtil {
             // 先把命中之前的文本拷贝过去
             sb.append(text, idx, hit);
 
-            // 判断当前位置是否已经是 targetTerm 的开头
-            boolean alreadyTarget =
-                    targetTerm != null
-                            && hit + targetLen <= len
-                            && text.startsWith(targetTerm, hit);
+            // sourceTerm 可能位于 targetTerm 中间，例如“战技”位于“元素战技”末尾。
+            // 只检查 hit 是否为 targetTerm 开头，会把“元素战技”错误改成“元素元素战技”。
+            int existingTargetEnd = findContainingTargetEnd(text, hit, sourceTerm, targetTerm);
 
-            if (alreadyTarget) {
-                // 已经是目标词开头了，直接按原文拷贝 targetTerm，一次性跳过
-                sb.append(text, hit, hit + targetLen);
-                idx = hit + targetLen;
+            if (existingTargetEnd >= 0) {
+                // 命中词已被现有目标词包住。前缀已在上面写入，只补写剩余部分。
+                sb.append(text, hit, existingTargetEnd);
+                idx = existingTargetEnd;
             } else {
                 // 不是目标词开头，正常做归一化替换
                 sb.append(targetTerm);
@@ -64,5 +63,21 @@ public class QueryTermMappingUtil {
         }
 
         return sb.toString();
+    }
+
+    /**
+     * 返回覆盖当前 source 命中的既有 target 的结束位置；不存在则返回 -1。
+     */
+    private static int findContainingTargetEnd(String text, int sourceHit, String sourceTerm, String targetTerm) {
+        int sourceOffset = targetTerm.indexOf(sourceTerm);
+        while (sourceOffset >= 0) {
+            int targetStart = sourceHit - sourceOffset;
+            int targetEnd = targetStart + targetTerm.length();
+            if (targetStart >= 0 && targetEnd <= text.length() && text.startsWith(targetTerm, targetStart)) {
+                return targetEnd;
+            }
+            sourceOffset = targetTerm.indexOf(sourceTerm, sourceOffset + 1);
+        }
+        return -1;
     }
 }

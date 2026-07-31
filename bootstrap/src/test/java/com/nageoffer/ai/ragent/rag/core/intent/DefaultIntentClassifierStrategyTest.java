@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -62,6 +63,45 @@ class DefaultIntentClassifierStrategyTest {
         verify(fixture.recallService()).shortlist(anyString(), anyList());
     }
 
+    @Test
+    void shouldExcludeManagedKnowledgeBaseAfterExplicitOutOfDomainRoute() {
+        Fixture fixture = fixture(2);
+        fixture.leaves().get(0).setKbId("managed-kb");
+        fixture.leaves().get(1).setKbId("legacy-kb");
+        when(fixture.llmService().chat(any(ChatRequest.class)))
+                .thenReturn("[{\"id\":\"leaf-1\",\"score\":0.91}]");
+
+        List<NodeScore> scores = fixture.classifier().classifyTargets(
+                "领域外问题",
+                com.nageoffer.ai.ragent.rag.core.retrieve.plan.EntityResolution.notFound(),
+                null,
+                Set.of("managed-kb")
+        );
+
+        assertEquals(1, scores.size());
+        assertEquals("leaf-1", scores.get(0).getNode().getId());
+    }
+
+    @Test
+    void shouldKeepLegacyLeafWithoutKnowledgeBaseWhenExcludingManagedKnowledgeBases() {
+        Fixture fixture = fixture(2);
+        fixture.leaves().get(0).setKbId("managed-kb");
+        // Legacy intent leaves are allowed to have no explicit knowledge-base binding.
+        fixture.leaves().get(1).setKbId(null);
+        when(fixture.llmService().chat(any(ChatRequest.class)))
+                .thenReturn("[{\"id\":\"leaf-1\",\"score\":0.91}]");
+
+        List<NodeScore> scores = fixture.classifier().classifyTargets(
+                "legacy fallback question",
+                com.nageoffer.ai.ragent.rag.core.retrieve.plan.EntityResolution.notFound(),
+                null,
+                Set.of("managed-kb")
+        );
+
+        assertEquals(1, scores.size());
+        assertEquals("leaf-1", scores.get(0).getNode().getId());
+    }
+
     private Fixture fixture(int leafCount) {
         List<IntentNode> leaves = new ArrayList<>();
         for (int i = 0; i < leafCount; i++) {
@@ -92,11 +132,12 @@ class DefaultIntentClassifierStrategyTest {
                 recallService,
                 properties
         );
-        return new Fixture(classifier, recallService, leaves);
+        return new Fixture(classifier, recallService, llmService, leaves);
     }
 
     private record Fixture(DefaultIntentClassifier classifier,
                            IntentHybridRecallService recallService,
+                           LLMService llmService,
                            List<IntentNode> leaves) {
     }
 }

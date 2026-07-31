@@ -27,6 +27,8 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -65,6 +67,55 @@ class KnowledgeBaseRoutingServiceTest {
         assertEquals("digital-store-v1", route.profileId());
         assertEquals("entity", route.strategy());
         verify(llmService, never()).chat(org.mockito.ArgumentMatchers.any(ChatRequest.class));
+    }
+
+    @Test
+    void marksQuestionOutOfDomainWhenLlmExplicitlyReturnsUnknown() {
+        EntityResolver entityResolver = mock(EntityResolver.class);
+        when(entityResolver.resolveAny(anyString(), anyString())).thenReturn(EntityResolution.notFound());
+        LLMService llmService = mock(LLMService.class);
+        when(llmService.chat(org.mockito.ArgumentMatchers.any(ChatRequest.class))).thenReturn("UNKNOWN");
+
+        KnowledgeBaseRoutingService service = service(entityResolver, llmService);
+        KnowledgeBaseRoute route = service.route("银狼的技能是什么？");
+
+        assertTrue(route.isOutOfDomain());
+        assertFalse(route.isResolved());
+        assertEquals(java.util.Set.of("1001", "2002"), service.managedKbIds());
+    }
+
+    @Test
+    void doesNotRouteWhenLlmExplanationMerelyMentionsAProfileId() {
+        EntityResolver entityResolver = mock(EntityResolver.class);
+        when(entityResolver.resolveAny(anyString(), anyString())).thenReturn(EntityResolution.notFound());
+        LLMService llmService = mock(LLMService.class);
+        when(llmService.chat(org.mockito.ArgumentMatchers.any(ChatRequest.class)))
+                .thenReturn("UNKNOWN because this is not digital-store-v1");
+
+        KnowledgeBaseRoute route = service(entityResolver, llmService).route("完全无关的问题");
+
+        assertTrue(route.isOutOfDomain());
+    }
+
+    @Test
+    void genericTechnicalWordCannotDeterministicallyRouteToProductCorpus() {
+        EntityResolver entityResolver = mock(EntityResolver.class);
+        when(entityResolver.resolveAny(anyString(), anyString())).thenReturn(EntityResolution.notFound());
+        LLMService llmService = mock(LLMService.class);
+        when(llmService.chat(org.mockito.ArgumentMatchers.any(ChatRequest.class))).thenReturn("UNKNOWN");
+
+        KnowledgeBaseRoutingProperties properties = new KnowledgeBaseRoutingProperties();
+        properties.setProfiles(List.of(
+                profile("genshin-v7", "1001", List.of("原神")),
+                profile("digital-store-v1", "2002", List.of("接口", "商品参数"))
+        ));
+        KnowledgeBaseRoutingService service = new KnowledgeBaseRoutingService(properties,
+                new KnowledgeBaseProfileRegistry(properties), entityResolver, llmService);
+
+        KnowledgeBaseRoute route = service.route("这个接口为什么返回 500？");
+
+        assertTrue(route.isOutOfDomain());
+        verify(llmService).chat(org.mockito.ArgumentMatchers.any(ChatRequest.class));
     }
 
     private KnowledgeBaseRoutingService service(EntityResolver entityResolver, LLMService llmService) {

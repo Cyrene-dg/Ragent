@@ -44,6 +44,7 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.nageoffer.ai.ragent.rag.constant.RAGConstant.INTENT_CLASSIFIER_PROMPT_PATH;
@@ -164,6 +165,12 @@ public class DefaultIntentClassifier implements IntentClassifier, IntentNodeRegi
 
     @Override
     public List<NodeScore> classifyTargets(String question, EntityResolution entityHint, String kbId) {
+        return classifyTargets(question, entityHint, kbId, Set.of());
+    }
+
+    @Override
+    public List<NodeScore> classifyTargets(String question, EntityResolution entityHint, String kbId,
+                                           Set<String> excludedKbIds) {
         // 每次优先从 Redis 缓存读取意图树；节点更新何时生效取决于缓存清理或过期策略
         IntentTreeData data = loadIntentTreeData();
         if (kbId != null && !kbId.isBlank()) {
@@ -175,6 +182,19 @@ public class DefaultIntentClassifier implements IntentClassifier, IntentNodeRegi
                 return List.of();
             }
             data = new IntentTreeData(data.allNodes, scopedLeafNodes, data.id2Node);
+        } else if (excludedKbIds != null && !excludedKbIds.isEmpty()) {
+            List<IntentNode> remainingLeafNodes = data.leafNodes.stream()
+                    // Legacy intent leaves may not be bound to a knowledge base. Keep them in the
+                    // fallback pool and only exclude leaves that explicitly belong to a managed KB.
+                    // Immutable sets reject contains(null), so the null check is also required.
+                    .filter(node -> node.getKbId() == null || !excludedKbIds.contains(node.getKbId()))
+                    .toList();
+            if (remainingLeafNodes.isEmpty()) {
+                log.info("No intent leaves remain after excluding out-of-domain managed knowledge bases: {}",
+                        excludedKbIds);
+                return List.of();
+            }
+            data = new IntentTreeData(data.allNodes, remainingLeafNodes, data.id2Node);
         }
 
         // 两阶段策略：叶子太多时先用 HybridRecall 粗筛再精判

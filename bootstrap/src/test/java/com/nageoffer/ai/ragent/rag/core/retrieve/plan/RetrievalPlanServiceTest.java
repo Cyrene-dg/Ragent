@@ -58,6 +58,7 @@ class RetrievalPlanServiceTest {
                 {"entity_type":"character","entity_id":"10000002","entity_name":"神里绫华","aliases":["神里绫华","绫华","Kamisato Ayaka"],"category":"character","source_document":"characters/ayaka.md","source_version":"v7"}
                 {"entity_type":"character","entity_id":"10000007","entity_name":"旅行者（空）","aliases":["旅行者"],"category":"character","source_document":"characters/aether.md","source_version":"v7"}
                 {"entity_type":"character","entity_id":"10000005","entity_name":"旅行者（荧）","aliases":["旅行者"],"category":"character","source_document":"characters/lumine.md","source_version":"v7"}
+                {"entity_type":"character","entity_id":"10000073","entity_name":"纳西妲","aliases":["纳西妲","草神"],"category":"character","source_document":"characters/nahida.md","source_version":"v7"}
                 {"entity_type":"weapon","entity_id":"11501","entity_name":"狼的末路","aliases":["狼末","狼的末路"],"category":"weapon","source_document":"weapons/wgs.md","source_version":"v7"}
                 """, StandardCharsets.UTF_8);
 
@@ -85,6 +86,16 @@ class RetrievalPlanServiceTest {
         assertEquals(List.of("character_skill", "character_constellation"),
                 intentPlan.filterLevels().get(0).metadataFilters().get("doc_type"));
         assertEquals("v7-global", intentPlan.filterLevels().get(intentPlan.filterLevels().size() - 1).name());
+    }
+
+    @Test
+    void resolvesCuratedCharacterAliasIntoTheCanonicalEntity() {
+        RetrievalPlan plan = retrievalPlanService.buildPlan("草神的元素战技", List.of(score("genshin_v7_character_skill")));
+
+        EntityResolution resolution = plan.intentPlans().get(0).entityResolution();
+        assertEquals(EntityResolutionStatus.MATCHED, resolution.status());
+        assertEquals("10000073", resolution.entityId());
+        assertEquals("纳西妲", resolution.entityName());
     }
 
     @Test

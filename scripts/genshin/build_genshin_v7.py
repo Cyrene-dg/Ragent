@@ -29,6 +29,12 @@ MAX_CHARS = 1100
 MIN_CHARS = 340
 OVERLAP_CHARS = 80
 
+# 只维护稳定、常见且无法从源文档名称自动推导的业务别名。
+# 键使用 entity_type + entity_id，避免同名实体之间互相污染。
+CURATED_ENTITY_ALIASES: dict[tuple[str, str], list[str]] = {
+    ("character", "10000073"): ["草神"],
+}
+
 
 @dataclass(frozen=True)
 class MarkdownBlock:
@@ -229,6 +235,7 @@ def entity_info(relative_path: Path, title: str, text: str) -> dict:
     english_name = read_basic_value(text, "EN Name")
     if english_name:
         aliases.append(english_name)
+    aliases.extend(CURATED_ENTITY_ALIASES.get((entity_type, entity_id), []))
     aliases = list(dict.fromkeys(alias for alias in map(normalized, aliases) if alias))
     return {
         "entity_type": entity_type,

@@ -24,7 +24,16 @@ public record KnowledgeBaseRoute(String kbId, String profileId, String strategy,
         return new KnowledgeBaseRoute(null, null, "unresolved", 0.0D);
     }
 
+    /** The router completed normally and explicitly rejected every managed corpus. */
+    public static KnowledgeBaseRoute outOfDomain() {
+        return new KnowledgeBaseRoute(null, null, "out-of-domain", 1.0D);
+    }
+
     public boolean isResolved() {
         return kbId != null && !kbId.isBlank();
+    }
+
+    public boolean isOutOfDomain() {
+        return "out-of-domain".equals(strategy);
     }
 }
