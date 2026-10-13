@@ -185,8 +185,9 @@ public class BaiLianChatClient implements ChatClient {
         if (request.getMaxTokens() != null) {
             reqBody.addProperty("max_tokens", request.getMaxTokens());
         }
-        if (stream && request.getThinking() != null && request.getThinking()) {
-            reqBody.addProperty("enable_thinking", true);
+        if (Boolean.TRUE.equals(target.candidate().getSupportsThinking())) {
+            // New Qwen models enable thinking by default; ordinary calls must opt out explicitly.
+            reqBody.addProperty("enable_thinking", Boolean.TRUE.equals(request.getThinking()));
         }
         return reqBody;
     }

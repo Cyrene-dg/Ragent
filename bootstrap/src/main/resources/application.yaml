@@ -201,16 +201,16 @@ ai:
     message-chunk-size: 1
 
   chat:
-    default-model: qwen3-max
-    deep-thinking-model: qwen3-max
+    default-model: qwen3.8-max
+    deep-thinking-model: qwen3.8-max
     candidates:
       - id: qwen-plus
         provider: bailian
         model: qwen-plus-latest
         priority: 1
-      - id: qwen3-max
+      - id: qwen3.8-max
         provider: bailian
-        model: qwen3-max
+        model: qwen3.8-max
         supports-thinking: true
         priority: 3
       - id: glm-4.7
