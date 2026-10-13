@@ -82,6 +82,31 @@ public class MultiChannelRetrievalEngine {
         // 构建共享上下文：所有通道读到的是同一份 Plan，避免 ES/Milvus 各自重新做路由判断
         SearchContext context = buildSearchContext(subIntents, topK, retrievalPlan);
 
+        return retrieve(context);
+    }
+
+    /** New KB boundary: explicit scope, no reinterpretation of a global routing decision. */
+    public List<RetrievedChunk> retrieveKnowledgeChannels(List<SubQuestionIntent> intents, int topK,
+                                                           RetrievalPlan plan, Set<String> allowedKbIds) {
+        if (allowedKbIds == null || allowedKbIds.isEmpty()) {
+            throw new IllegalArgumentException("Knowledge retrieval requires an explicit corpus scope");
+        }
+        if (intents.stream().flatMap(intent -> intent.nodeScores().stream())
+                .anyMatch(score -> score.getNode() == null || !score.getNode().isKB()
+                        || !allowedKbIds.contains(score.getNode().getKbId()))) {
+            throw new IllegalArgumentException("Intent is outside the knowledge scope");
+        }
+        if (plan != null && plan.intentPlans().stream().anyMatch(value -> !allowedKbIds.contains(value.kbId()))) {
+            throw new IllegalArgumentException("Retrieval plan is outside the knowledge scope");
+        }
+        String question = intents.isEmpty() ? "" : intents.get(0).subQuestion();
+        return retrieve(SearchContext.builder().originalQuestion(question).rewrittenQuestion(question)
+                .intents(intents).topK(topK).retrievalPlan(plan).routedKbIds(Set.copyOf(allowedKbIds))
+                .excludedKbIds(Set.of()).build());
+    }
+
+    private List<RetrievedChunk> retrieve(SearchContext context) {
+
         // 【阶段 1：多通道并行检索】ES 与 Milvus 可以同时执行，互不等待
         List<SearchChannelResult> channelResults = executeSearchChannels(context);
         if (CollUtil.isEmpty(channelResults)) {

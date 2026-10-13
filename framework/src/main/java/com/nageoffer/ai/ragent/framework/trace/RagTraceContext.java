@@ -30,7 +30,19 @@ public final class RagTraceContext {
 
     private static final TransmittableThreadLocal<String> TRACE_ID = new TransmittableThreadLocal<>();
     private static final TransmittableThreadLocal<String> TASK_ID = new TransmittableThreadLocal<>();
-    private static final TransmittableThreadLocal<Deque<String>> NODE_STACK = new TransmittableThreadLocal<>();
+    /**
+     * 节点栈是可变对象。TTL 默认 copy 只传递原引用；若多个异步任务并行执行，
+     * 它们会共同 push/pop 同一个 ArrayDeque，进而把兄弟节点错误记录成父子节点。
+     *
+     * 每次由 TtlExecutors 提交任务时复制父线程的当前栈快照，使分支只在自己的副本上修改。
+     */
+    private static final TransmittableThreadLocal<Deque<String>> NODE_STACK =
+            new TransmittableThreadLocal<>() {
+                @Override
+                public Deque<String> copy(Deque<String> parentValue) {
+                    return parentValue == null ? null : new ArrayDeque<>(parentValue);
+                }
+            };
 
     private RagTraceContext() {
     }

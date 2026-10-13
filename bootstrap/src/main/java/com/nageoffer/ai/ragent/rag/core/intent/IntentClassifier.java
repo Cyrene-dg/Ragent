@@ -33,6 +33,17 @@ import java.util.Set;
  */
 public interface IntentClassifier {
 
+    default List<IntentNode> leafTargets() {
+        return List.of();
+    }
+
+    default List<NodeScore> classifyKnowledgeTargets(String question, EntityResolution hint, String kbId) {
+        return classifyTargets(question, hint, kbId).stream()
+                .filter(score -> score.getNode() != null && score.getNode().isKB())
+                .filter(score -> kbId.equals(score.getNode().getKbId()))
+                .toList();
+    }
+
     /**
      * 对所有叶子分类节点做意图识别
      *

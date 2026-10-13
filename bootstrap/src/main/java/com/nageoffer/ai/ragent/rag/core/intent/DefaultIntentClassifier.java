@@ -112,6 +112,24 @@ public class DefaultIntentClassifier implements IntentClassifier, IntentNodeRegi
         return data.id2Node.get(id);
     }
 
+    @Override
+    public List<IntentNode> leafTargets() {
+        return List.copyOf(loadIntentTreeData().leafNodes);
+    }
+
+    @Override
+    public List<NodeScore> classifyKnowledgeTargets(String question, EntityResolution hint, String kbId) {
+        if (kbId == null || kbId.isBlank()) {
+            throw new IllegalArgumentException("Knowledge classification requires a knowledge-base scope");
+        }
+        IntentTreeData data = loadIntentTreeData();
+        List<IntentNode> leaves = data.leafNodes.stream()
+                .filter(IntentNode::isKB)
+                .filter(node -> kbId.equals(node.getKbId()))
+                .toList();
+        return classifyLeaves(question, hint, new IntentTreeData(data.allNodes, leaves, data.id2Node));
+    }
+
     /**
      * 意图树数据结构（临时对象，不持久化）
      */
@@ -197,6 +215,13 @@ public class DefaultIntentClassifier implements IntentClassifier, IntentNodeRegi
             data = new IntentTreeData(data.allNodes, remainingLeafNodes, data.id2Node);
         }
 
+        return classifyLeaves(question, entityHint, data);
+    }
+
+    private List<NodeScore> classifyLeaves(String question, EntityResolution entityHint, IntentTreeData data) {
+        if (data.leafNodes.isEmpty()) {
+            return List.of();
+        }
         // 两阶段策略：叶子太多时先用 HybridRecall 粗筛再精判
         int totalLeafCount = data.leafNodes.size();
         boolean twoStage = intentPreFilterProperties.shouldUseTwoStage(totalLeafCount);
@@ -211,6 +236,13 @@ public class DefaultIntentClassifier implements IntentClassifier, IntentNodeRegi
                 totalLeafCount,
                 candidateLeafNodes.size(),
                 intentPreFilterProperties.getCandidateLimit());
+
+        Map<String, IntentNode> allowedNodes = candidateLeafNodes.stream()
+                .filter(data.leafNodes::contains)
+                .collect(Collectors.toMap(IntentNode::getId, node -> node, (left, right) -> left));
+        if (allowedNodes.isEmpty()) {
+            return List.of();
+        }
 
         // 构建 LLM 请求：system prompt = 意图列表 + 分类指令，user prompt = 用户问题
         String systemPrompt = buildPrompt(candidateLeafNodes, entityHint);
@@ -256,13 +288,16 @@ public class DefaultIntentClassifier implements IntentClassifier, IntentNodeRegi
                 double score = obj.get("score").getAsDouble();
 
                 // 从 id2Node 映射表找回真实 IntentNode（防 LLM 幻觉生成不存在的 id）
-                IntentNode node = data.id2Node.get(id);
+                IntentNode node = allowedNodes.get(id);
                 if (node == null) {
                     log.warn("LLM 返回了未知的意图节点 ID: {}, 已跳过", id);
                     continue;
                 }
 
-                scores.add(new NodeScore(node, score));
+                if (Double.isFinite(score) && score >= 0 && score <= 1
+                        && scores.stream().noneMatch(existing -> id.equals(existing.getNode().getId()))) {
+                    scores.add(new NodeScore(node, score));
+                }
             }
 
             // 按分数降序：置信度最高的意图排最前

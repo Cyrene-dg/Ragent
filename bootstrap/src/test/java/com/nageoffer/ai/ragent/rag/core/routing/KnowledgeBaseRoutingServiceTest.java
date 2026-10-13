@@ -25,17 +25,41 @@ import com.nageoffer.ai.ragent.rag.core.retrieve.plan.EntityResolver;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class KnowledgeBaseRoutingServiceTest {
+
+    @Test
+    void routesTwoExplicitDomainsWithoutDiscardingOne() {
+        var entities = mock(EntityResolver.class);
+        when(entities.resolveAny(anyString(), anyString())).thenReturn(EntityResolution.notFound());
+        var llm = mock(LLMService.class);
+        var routes = service(entities, llm).routeAll("分别查询原神和手机资料", List.of());
+        assertEquals(Set.of("1001", "2002"), routes.stream().map(KnowledgeBaseRoute::kbId)
+                .collect(java.util.stream.Collectors.toSet()));
+        verifyNoInteractions(llm);
+    }
+
+    @Test
+    void multiRouterRejectsUnknownProfileInsteadOfSearchingGlobally() {
+        var entities = mock(EntityResolver.class);
+        when(entities.resolveAny(anyString(), anyString())).thenReturn(EntityResolution.notFound());
+        var llm = mock(LLMService.class);
+        when(llm.chat(any(ChatRequest.class))).thenReturn("[\"not-registered\"]");
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> service(entities, llm).routeAll("ambiguous query", List.of()));
+    }
 
     @Test
     void routesProductQuestionByKeywordWithoutCallingLlm() {

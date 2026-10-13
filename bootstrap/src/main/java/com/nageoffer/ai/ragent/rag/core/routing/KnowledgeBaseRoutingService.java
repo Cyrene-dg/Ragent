@@ -31,6 +31,7 @@ import org.springframework.util.StringUtils;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -56,6 +57,49 @@ public class KnowledgeBaseRoutingService {
     private final KnowledgeBaseProfileRegistry profileRegistry;
     private final EntityResolver entityResolver;
     private final LLMService llmService;
+
+    /** KB-local multi-corpus routing. Extra profiles describe legacy intent-bound corpora. */
+    public List<KnowledgeBaseRoute> routeAll(String question,
+                                            List<KnowledgeBaseRoutingProperties.Profile> extraProfiles) {
+        Map<String, KnowledgeBaseRoutingProperties.Profile> profiles = new java.util.LinkedHashMap<>();
+        profileRegistry.enabledProfiles().forEach(profile -> profiles.put(profile.getKbId(), profile));
+        extraProfiles.forEach(profile -> profiles.putIfAbsent(profile.getKbId(), profile));
+        if (!StringUtils.hasText(question) || profiles.isEmpty()) {
+            return List.of();
+        }
+        Set<String> managed = profileRegistry.enabledProfiles().stream()
+                .map(KnowledgeBaseRoutingProperties.Profile::getKbId).collect(Collectors.toSet());
+        // Legacy corpora have no private entity catalog; never reuse another corpus's default catalog to score them.
+        List<Candidate> candidates = profiles.values().stream()
+                .map(profile -> managed.contains(profile.getKbId()) ? score(question, profile) : new Candidate(profile, 0, false))
+                .toList();
+        List<KnowledgeBaseRoute> hits = candidates.stream().filter(candidate -> candidate.score() > 0)
+                .map(candidate -> resolved(candidate, candidate.entityMatched() ? "entity" : "keyword", 0.9D))
+                .toList();
+        if (!hits.isEmpty()) {
+            return hits;
+        }
+        if (!properties.isLlmFallbackEnabled()) {
+            return List.of();
+        }
+        String choices = candidates.stream().map(candidate -> candidate.profile().getId() + ": "
+                + candidate.profile().getDescription()).collect(Collectors.joining("\n"));
+        String raw = llmService.chat(ChatRequest.builder()
+                .messages(List.of(ChatMessage.system("Select the knowledge bases explicitly needed by the question. "
+                        + "Return a JSON array of profile IDs from the list; use [] if none or unclear. "
+                        + "Multiple profiles are allowed only when each is relevant.\n" + choices), ChatMessage.user(question)))
+                .thinking(false).temperature(0D).build());
+        var array = com.google.gson.JsonParser.parseString(
+                com.nageoffer.ai.ragent.infra.util.LLMResponseCleaner.stripMarkdownCodeFence(raw)).getAsJsonArray();
+        Set<String> selected = new java.util.LinkedHashSet<>();
+        array.forEach(value -> selected.add(value.getAsString()));
+        Set<String> allowed = candidates.stream().map(candidate -> candidate.profile().getId()).collect(Collectors.toSet());
+        if (!allowed.containsAll(selected)) {
+            throw new IllegalArgumentException("Knowledge router returned an unregistered profile");
+        }
+        return candidates.stream().filter(candidate -> selected.contains(candidate.profile().getId()))
+                .map(candidate -> resolved(candidate, "llm", 0.6D)).toList();
+    }
 
     public KnowledgeBaseRoute route(String question) {
         if (!profileRegistry.isRoutingEnabled() || !StringUtils.hasText(question)) {
@@ -139,6 +183,11 @@ public class KnowledgeBaseRoutingService {
                 .map(KnowledgeBaseRoutingProperties.Profile::getKbId)
                 .filter(StringUtils::hasText)
                 .collect(Collectors.toUnmodifiableSet());
+    }
+
+    public String entityFallbackCollection(String kbId) {
+        return profileRegistry.findByKbId(kbId)
+                .map(KnowledgeBaseRoutingProperties.Profile::getEntityFallbackCollectionName).orElse(null);
     }
 
     private static String normalizeRouteAnswer(String value) {

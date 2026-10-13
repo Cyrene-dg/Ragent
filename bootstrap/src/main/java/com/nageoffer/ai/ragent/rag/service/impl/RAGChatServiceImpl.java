@@ -28,19 +28,17 @@ import com.nageoffer.ai.ragent.infra.chat.LLMService;
 import com.nageoffer.ai.ragent.infra.chat.StreamCallback;
 import com.nageoffer.ai.ragent.infra.chat.StreamCancellationHandle;
 import com.nageoffer.ai.ragent.rag.aop.ChatRateLimit;
-import com.nageoffer.ai.ragent.rag.core.guidance.GuidanceDecision;
-import com.nageoffer.ai.ragent.rag.core.guidance.IntentGuidanceService;
-import com.nageoffer.ai.ragent.rag.core.intent.IntentResolver;
 import com.nageoffer.ai.ragent.rag.core.memory.ConversationMemoryService;
 import com.nageoffer.ai.ragent.rag.core.prompt.PromptContext;
 import com.nageoffer.ai.ragent.rag.core.prompt.PromptTemplateLoader;
 import com.nageoffer.ai.ragent.rag.core.prompt.RAGPromptService;
-import com.nageoffer.ai.ragent.rag.core.retrieve.RetrievalEngine;
+import com.nageoffer.ai.ragent.rag.core.workflow.RequestPlanner;
+import com.nageoffer.ai.ragent.rag.core.workflow.ExecutionCoordinator;
+import com.nageoffer.ai.ragent.rag.core.workflow.ResponseAssembler;
 import com.nageoffer.ai.ragent.rag.core.rewrite.QueryRewriteService;
 import com.nageoffer.ai.ragent.rag.core.rewrite.RewriteResult;
 import com.nageoffer.ai.ragent.rag.dto.IntentGroup;
 import com.nageoffer.ai.ragent.rag.dto.RetrievalContext;
-import com.nageoffer.ai.ragent.rag.dto.SubQuestionIntent;
 import com.nageoffer.ai.ragent.rag.service.RAGChatService;
 import com.nageoffer.ai.ragent.rag.service.handler.StreamCallbackFactory;
 import com.nageoffer.ai.ragent.rag.service.handler.StreamTaskManager;
@@ -53,13 +51,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.nageoffer.ai.ragent.rag.constant.RAGConstant.CHAT_SYSTEM_PROMPT_PATH;
-import static com.nageoffer.ai.ragent.rag.constant.RAGConstant.DEFAULT_TOP_K;
 
 /**
  * RAG 对话服务默认实现
  * <p>
  * 核心流程：
- * 记忆加载 -> 改写拆分 -> 意图解析 -> 歧义引导 -> 检索(MCP+KB) -> Prompt 组装 -> 流式输出
+ * 记忆加载 -> 改写拆分 -> 能力规划 -> 执行协调 -> 结果组装 -> 流式输出
  */
 @Slf4j
 @Service
@@ -71,11 +68,11 @@ public class RAGChatServiceImpl implements RAGChatService {
     private final PromptTemplateLoader promptTemplateLoader;
     private final ConversationMemoryService memoryService;
     private final StreamTaskManager taskManager;
-    private final IntentGuidanceService guidanceService;
     private final StreamCallbackFactory callbackFactory;
     private final QueryRewriteService queryRewriteService;
-    private final IntentResolver intentResolver;
-    private final RetrievalEngine retrievalEngine;
+    private final RequestPlanner requestPlanner;
+    private final ExecutionCoordinator executionCoordinator;
+    private final ResponseAssembler responseAssembler;
 
     @Override
     //自定义注解，聊天接口限流
@@ -99,61 +96,53 @@ public class RAGChatServiceImpl implements RAGChatService {
 
         //对用户问题改写拆分
         RewriteResult rewriteResult = queryRewriteService.rewriteWithSplit(question, history);
-        //根据改写拆分好的问题识别意图
-        List<SubQuestionIntent> subIntents = intentResolver.resolve(rewriteResult);
-
-        //是否澄清用户问题
-        GuidanceDecision guidanceDecision = guidanceService.detectAmbiguity(rewriteResult.rewrittenQuestion(), subIntents);
-        if (guidanceDecision.isPrompt()) {
-            //需要用户澄清的话把提示语给前端不在继续检索和模型调用
-            callback.onContent(guidanceDecision.getPrompt());
+        var plan = requestPlanner.plan(rewriteResult);
+        if (StrUtil.isNotBlank(plan.clarification())) {
+            callback.onContent(plan.clarification());
             callback.onComplete();
             return;
         }
-
-        //判断系统内置回答行不行
-        boolean allSystemOnly = subIntents.stream()
-                .allMatch(si -> intentResolver.isSystemOnly(si.nodeScores()));
-        //如果可以仅在内置解决，尝试找一个可用的自定义 Prompt 模板。
-        if (allSystemOnly) {
-            //1.遍历所有子意图2.再遍历它们对应的节点分数3.取出节点上的 promptTemplate4.过滤空的5.找到第一个非空模板6.找不到就返回 null
-            String customPrompt = subIntents.stream()
-                    .flatMap(si -> si.nodeScores().stream())
-                    .map(ns -> ns.getNode().getPromptTemplate())
-                    .filter(StrUtil::isNotBlank)
-                    .findFirst()
-                    .orElse(null);
-            //调用streamSystemResponse，传入的参数是改写后的问题，历史对话，刚找到的prompt，流式输出回调
-            StreamCancellationHandle handle = streamSystemResponse(rewriteResult.rewrittenQuestion(), history, customPrompt, callback);
-            //绑定这次任务于任务id
+        List<ExecutionCoordinator.StepResult> results;
+        try {
+            results = executionCoordinator.execute(plan);
+        } catch (IllegalArgumentException exception) {
+            log.warn("Execution plan rejected: {}", exception.getMessage());
+            callback.onContent("处理计划已失效或尚不支持该执行顺序，请明确操作后重试。");
+            callback.onComplete();
+            return;
+        }
+        var response = responseAssembler.assemble(results);
+        boolean directOnly = results.stream().allMatch(result -> result.step().kind()
+                == com.nageoffer.ai.ragent.rag.enums.IntentKind.SYSTEM);
+        boolean hasDirect = results.stream().anyMatch(result -> result.step().kind()
+                == com.nageoffer.ai.ragent.rag.enums.IntentKind.SYSTEM);
+        String customPrompt = response.directInstructions().stream().findFirst().orElse(null);
+        if (directOnly || response.context().isEmpty() && hasDirect) {
+            if (!response.failures().isEmpty()) {
+                customPrompt = (customPrompt == null ? promptTemplateLoader.load(CHAT_SYSTEM_PROMPT_PATH) : customPrompt)
+                        + "\nSome requested operations failed. State these limitations explicitly: " + response.failures();
+            }
+            if (response.clarification() != null) {
+                customPrompt = (customPrompt == null ? promptTemplateLoader.load(CHAT_SYSTEM_PROMPT_PATH) : customPrompt)
+                        + "\nPrivate knowledge needs clarification: " + response.clarification();
+            }
+            var handle = streamSystemResponse(rewriteResult.rewrittenQuestion(), history, customPrompt, callback);
             taskManager.bindHandle(taskId, handle);
-            //结束方法
             return;
         }
-
-        //系统内置回答解决不了，进入标准 RAG 检索。
-        RetrievalContext ctx = retrievalEngine.retrieve(subIntents, DEFAULT_TOP_K);
-        //检索结果为空直接返回
-        if (ctx.isEmpty()) {
-            String emptyReply = "未检索到与问题相关的文档内容。";
-            callback.onContent(emptyReply);
+        if (response.context().isEmpty()) {
+            String reply = response.clarification() != null ? response.clarification()
+                    : !response.failures().isEmpty() ? String.join("\n", response.failures())
+                    : "未检索到与问题相关的文档内容。";
+            callback.onContent(reply);
             callback.onComplete();
             return;
         }
-
-        // 聚合所有意图用于 prompt 规划
-        IntentGroup mergedGroup = intentResolver.mergeIntentGroup(subIntents);
-
-        //调用大模型进行流式回答
-        StreamCancellationHandle handle = streamLLMResponse(
-                rewriteResult,//改写后的问题结果
-                ctx,//检索到的知识库内容
-                mergedGroup,//合并后的总体意图
-                history,//历史对话
-                thinkingEnabled,//是否开启深度思考
-                callback//流式输出通道
-        );
-        //把当前任务 ID 和模型流式任务绑定。
+        List<String> instructions = new ArrayList<>(response.directInstructions());
+        if (!response.failures().isEmpty()) instructions.add("部分步骤失败，请明确说明，不要编造结果：" + response.failures());
+        if (response.clarification() != null) instructions.add("部分资料范围待澄清：" + response.clarification());
+        StreamCancellationHandle handle = streamLLMResponse(rewriteResult, response.context(), response.intents(),
+                history, thinkingEnabled, callback, instructions);
         taskManager.bindHandle(taskId, handle);
     }
 
@@ -194,7 +183,7 @@ public class RAGChatServiceImpl implements RAGChatService {
     //调用大模型的方法
     private StreamCancellationHandle streamLLMResponse(RewriteResult rewriteResult, RetrievalContext ctx,
                                                        IntentGroup intentGroup, List<ChatMessage> history,
-                                                       boolean deepThinking, StreamCallback callback) {
+                                                       boolean deepThinking, StreamCallback callback, List<String> instructions) {
         //建造者模式，构建一个PromptContext 对象，即提示词上下文
         PromptContext promptContext = PromptContext.builder()
                 .question(rewriteResult.rewrittenQuestion())//改写后的问题
@@ -213,6 +202,10 @@ public class RAGChatServiceImpl implements RAGChatService {
                 rewriteResult.subQuestions()  // 传入子问题列表
         );
         //构造一个 ChatRequest
+        if (!instructions.isEmpty()) {
+            messages = new ArrayList<>(messages);
+            messages.add(0, ChatMessage.system(String.join("\n", instructions)));
+        }
         ChatRequest chatRequest = ChatRequest.builder()
                 .messages(messages)
                 .thinking(deepThinking)//深度思考

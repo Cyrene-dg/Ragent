@@ -40,6 +40,41 @@ import static org.mockito.Mockito.when;
 class DefaultIntentClassifierStrategyTest {
 
     @Test
+    void knowledgeClassificationRejectsToolEvenWhenBoundToSameCorpus() {
+        Fixture fixture = fixture(2);
+        fixture.leaves().get(0).setKbId("kb");
+        fixture.leaves().get(1).setKbId("kb");
+        fixture.leaves().get(1).setKind(com.nageoffer.ai.ragent.rag.enums.IntentKind.MCP);
+        when(fixture.llmService().chat(any(ChatRequest.class)))
+                .thenReturn("[{\"id\":\"leaf-1\",\"score\":0.99}]");
+        assertEquals(0, fixture.classifier().classifyKnowledgeTargets("tool leak",
+                com.nageoffer.ai.ragent.rag.core.retrieve.plan.EntityResolution.notFound(), "kb").size());
+    }
+
+    @Test
+    void rejectsExistingNodeOutsideHybridShortlist() {
+        Fixture fixture = fixture(81);
+        when(fixture.recallService().shortlist(anyString(), anyList()))
+                .thenReturn(List.of(fixture.leaves().get(0)));
+        when(fixture.llmService().chat(any(ChatRequest.class)))
+                .thenReturn("[{\"id\":\"leaf-1\",\"score\":0.99}]");
+
+        assertEquals(0, fixture.classifier().classifyTargets("越界节点").size());
+    }
+
+    @Test
+    void rejectsExistingNodeOutsideRoutedKnowledgeBase() {
+        Fixture fixture = fixture(2);
+        fixture.leaves().get(0).setKbId("allowed");
+        fixture.leaves().get(1).setKbId("other");
+        when(fixture.llmService().chat(any(ChatRequest.class)))
+                .thenReturn("[{\"id\":\"leaf-1\",\"score\":0.99}]");
+
+        assertEquals(0, fixture.classifier().classifyTargets("越库节点",
+                com.nageoffer.ai.ragent.rag.core.retrieve.plan.EntityResolution.notFound(), "allowed").size());
+    }
+
+    @Test
     void shouldClassifyDirectlyWhenAllLeavesFitWithinCandidateLimit() {
         Fixture fixture = fixture(12);
 
